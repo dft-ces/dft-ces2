@@ -1,0 +1,83 @@
+units           real
+atom_style      full
+boundary        p p f
+dielectric      1
+special_bonds   lj/coul 0.0 0.0 1.0
+bond_style      harmonic
+angle_style     harmonic
+dihedral_style  none
+improper_style  none
+pair_style      hybrid/overlay lj/cut/tip4p/long 1 2 1 1 0.125 15 bjdisp 15
+kspace_style    pppm/tip4p 0.0001
+kspace_modify   slab 3.0
+processors      * * 1
+
+#read_data		data.lammps
+reset_timestep	0
+
+group			OXYGEN type 1
+group			PROTON type 2
+group     SOLVENT union OXYGEN PROTON
+group     SOLUTE type 3 
+set				group SOLUTE charge 0.0
+
+pair_coeff  1 1 lj/cut/tip4p/long 0.16275000    3.16435
+pair_coeff  1 2 lj/cut/tip4p/long 0.0 0.0
+pair_coeff  2 2 lj/cut/tip4p/long 0.0 0.0
+pair_coeff  1 3 bjdisp 6.51134594 1.400 219.0516651
+pair_coeff  2 3 bjdisp 3.88918809 0.530 119.5943702
+pair_coeff  3 3 bjdisp 0.0 0.0 0.0
+
+## set new xyz
+
+neighbor        2.0 multi
+variable        sname index sol00
+variable    	Egrid equal 0
+neigh_modify    every 2 delay 4 check yes
+neigh_modify    exclude group SOLUTE SOLUTE
+neigh_modify    one 4000
+
+compute         tempSolvent SOLVENT temp
+compute     	edisp all pair bjdisp
+
+bond_coeff	1 450 0.9572
+angle_coeff	1 55 104.52
+
+fix             hGrid PROTON gridforce -1 16 0 tip4p 1 2 0.9572 104.52 0.125 H 1
+fix             oGrid OXYGEN gridforce -1 16 1 tip4p 1 2 0.9572 104.52 0.125 O 1
+fix_modify      oGrid energy yes             # include grid energy to lammps total energy
+fix_modify      hGrid energy yes             # include grid energy to lammps total energy
+variable        Egrid_H equal f_hGrid[1]
+variable        EgridInd_H equal f_hGrid[2]
+variable        EgridRep_H equal f_hGrid[3]
+variable        Egrid_O equal f_oGrid[1]
+variable        EgridInd_O equal f_oGrid[2]
+variable        EgridRep_O equal f_oGrid[3]
+
+#CUBEPOSITION
+
+thermo_style    custom temp c_tempSolvent etotal ke pe ebond eangle evdwl ecoul elong press v_Egrid_H v_EgridRep_H v_Egrid_O v_EgridRep_O c_edisp v_EgridInd_H v_EgridInd_O
+thermo_modify   line multi format float %10.5f
+thermo          100
+timestep        1.0
+
+###
+compute         fdisp SOLUTE force/tally SOLVENT
+fix             showf all ave/atom 1 200 200 c_fdisp[*]
+dump            11 SOLUTE custom 100 dispf.ave id type xu yu zu f_showf[*]
+dump_modify     11 sort id
+###
+
+fix             5 SOLVENT momentum 1 linear 1 1 1 angular
+fix             shakeH SOLVENT shake 0.0001 20 500 a 1 b 1
+fix             wallhi SOLVENT wall/harmonic zhi 72 1.0 1.0 5.0
+#velocity        all create 300.0 4285761 dist uniform
+dump            1 all custom 1000 ${sname}.emd.lammpstrj id type xu yu zu fx fy fz
+fix             2 SOLVENT nvt temp 300.0 300.0 100.0
+#write_restart	ini2.restart
+restart         500000 ${sname}.*.restart
+run             0 # 0.5 ns
+unfix           2
+undump          1
+unfix           shakeH
+unfix           5

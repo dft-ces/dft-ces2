@@ -1,0 +1,41 @@
+&CONTROL
+  calculation = "scf",
+  pseudo_dir  = "/home/jthlol/scripts/pseudo",
+  prefix      = "solute",
+  outdir      = "./solute",
+  tprnfor     = .true.,
+  tefield     = .true.
+  dipfield    = .true.
+  forc_conv_thr = 1.0D-3
+/
+&SYSTEM
+  ibrav       = 0,
+  nat         = 24,
+  ntyp        = 1,
+  ecutwfc     = 50.0,
+  ecutrho     = 300.0,
+  occupations = "smearing",
+  degauss = 0.0147,
+  edir        = 3,
+  emaxpos     = 0.9,
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.7D0,
+  electron_maxstep = 200,
+/
+&IONS
+/
+ATOMIC_SPECIES
+C  12.0  C.pbe-n-kjpaw_psl.0.1.UPF
+CELL_PARAMETERS {angstrom}
+7.406400000    -0.000000000    -0.000000000
+0.000000000     8.552200000    -0.000000000
+0.000000000     0.000000000    80.000000000
+ATOMIC_POSITIONS {angstrom}
+###qmxyz
+
+ATOMIC_FORCES
+###dispf
+K_POINTS automatic
+5 5 1 0 0 0

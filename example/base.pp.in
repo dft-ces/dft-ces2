@@ -1,0 +1,14 @@
+ &inputpp
+    prefix  = 'solute'
+    outdir = './solute'
+    filplot = 'solute.temp'
+    plot_num= 11
+ /
+ &plot
+    nfile = 1
+    filepp(1) = 'solute.temp'
+    weight(1) = 1.0
+    iflag = 3
+    output_format = 6
+    fileout = 'solute.pot.cube'
+ /
