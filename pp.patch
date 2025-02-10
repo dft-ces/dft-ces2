@@ -1,0 +1,17 @@
+Binary files QE_6.3_ori/PP/src/libpp.a and QE_6.3_new/PP/src/libpp.a differ
+diff -ruN QE_6.3_ori/PP/src/punch_plot.f90 QE_6.3_new/PP/src/punch_plot.f90
+--- QE_6.3_ori/PP/src/punch_plot.f90	2021-12-20 14:37:57.818749953 +0900
++++ QE_6.3_new/PP/src/punch_plot.f90	2021-12-20 14:37:14.989646947 +0900
+@@ -214,8 +214,10 @@
+         nspin = 1
+      ENDIF
+      CALL v_h (rho%of_g, ehart, charge, raux)
+-     IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
+-
++     !IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
++     IF (tefield.and.dipfield) THEN
++        WRITE(stdout,*) "V_hartree and V_bare is shown but V_saw is printed in pw by jay"
++     ENDIF
+   ELSEIF (plot_num == 12) THEN
+ 
+      raux=0.d0

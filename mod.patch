@@ -1,0 +1,82 @@
+diff -ruN QE_6.3_ori/Modules/input_parameters.f90 QE_6.3_new/Modules/input_parameters.f90
+--- QE_6.3_ori/Modules/input_parameters.f90	2021-12-20 14:41:04.988200105 +0900
++++ QE_6.3_new/Modules/input_parameters.f90	2021-12-20 14:40:48.129159559 +0900
+@@ -272,6 +272,15 @@
+ 
+           ! if .TRUE., perform exact exchange calculation using Wannier functions (X. Wu et al., Phys. Rev. B. 79, 085102 (2009))
+ 
++! DFT-CES start
++        LOGICAL :: dft_ces = .false.
++        ! If true reads MD rho from file "file_pot"
++        CHARACTER(len=80) :: rho_ces = './rho_ces.cube'
++        CHARACTER(len=80) :: rho_ces_ion = './rho_ces_ion.cube'
++        CHARACTER(len=80) :: rho_ces_rep = './rho_ces_rep.cube'
++        ! File containing the MD.rho as gaussian cube format
++        ! with conventional charge sign: -1 = electron
++! DFT-CES end
+         LOGICAL  :: lfcpopt = .FALSE. ! FCP optimisation switch
+         LOGICAL  :: lfcpdyn = .FALSE. ! FCP thermostat enabled if .true.
+         !
+@@ -285,6 +294,9 @@
+           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
+           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
+           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
++! DFT-CES start
++          dft_ces, rho_ces, rho_ces_ion, rho_ces_rep,                    &
++! DFT-CES end
+           lfcpopt, lfcpdyn, input_xml_schema_file, gate                                        
+ !
+ !=----------------------------------------------------------------------------=!
+diff -ruN QE_6.3_ori/Modules/ions_base.f90 QE_6.3_new/Modules/ions_base.f90
+--- QE_6.3_ori/Modules/ions_base.f90	2021-12-20 14:41:04.989200107 +0900
++++ QE_6.3_new/Modules/ions_base.f90	2021-12-20 14:40:49.101161897 +0900
+@@ -250,6 +250,7 @@
+                   tau(i,ia) = at_(i,1)*alat_ * tau_(1,ia) + &
+                               at_(i,2)*alat_ * tau_(2,ia) + &
+                               at_(i,3)*alat_ * tau_(3,ia)
++
+                   !
+                   vel(i,ia) = at_(i,1)*alat_ * vel_(1,ia) + &
+                               at_(i,2)*alat_ * vel_(2,ia) + &
+Binary files QE_6.3_ori/Modules/libqemod.a and QE_6.3_new/Modules/libqemod.a differ
+diff -ruN QE_6.3_ori/Modules/read_namelists.f90 QE_6.3_new/Modules/read_namelists.f90
+--- QE_6.3_ori/Modules/read_namelists.f90	2021-12-20 14:41:05.011200160 +0900
++++ QE_6.3_new/Modules/read_namelists.f90	2021-12-20 14:40:46.577155826 +0900
+@@ -130,6 +130,12 @@
+        lfcpopt = .FALSE.
+        lfcpdyn = .FALSE.
+        !
++! DFT-CES start
++       dft_ces = .FALSE.
++       rho_ces = './rho_ces.cube'
++       rho_ces_ion = './rho_ces_ion.cube'
++       rho_ces_rep = './rho_ces_rep.cube'
++! DFT-CES end
+        CALL get_environment_variable( 'QEXML', input_xml_schema_file )
+        !
+        RETURN
+@@ -740,6 +746,12 @@
+        CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
+        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
+        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
++! DFT-CES start
++       CALL mp_bcast( dft_ces,       ionode_id, intra_image_comm )
++       CALL mp_bcast( rho_ces,       ionode_id, intra_image_comm )
++       CALL mp_bcast( rho_ces_ion,   ionode_id, intra_image_comm )
++       CALL mp_bcast( rho_ces_rep,   ionode_id, intra_image_comm )
++! DFT-CES end
+        !
+        RETURN
+        !
+diff -ruN QE_6.3_ori/Modules/version.f90 QE_6.3_new/Modules/version.f90
+--- QE_6.3_ori/Modules/version.f90	2021-12-20 14:41:05.016200172 +0900
++++ QE_6.3_new/Modules/version.f90	2021-12-20 14:40:47.280157517 +0900
+@@ -12,7 +12,7 @@
+   !
+   SAVE
+   !
+-  CHARACTER (LEN=6) :: version_number = '6.3MaX'
++  CHARACTER (LEN=6) :: version_number = '6.3'
+   CHARACTER (LEN=12) :: svn_revision = 'unknown'
+   !
+ END MODULE global_version
