@@ -116,7 +116,7 @@ post_dipole (){
         $CUBEADD ${cube_output_MM[@]}
         mv add.cube mobile.cube
         $addfour postdipx.cube postdipy.cube postdipz.cube mobile.cube
-        mv add.cube MOBILE_final.cube
+        mv add.cube pq+bq.cube
         rm add*.cube post*.cube dip?.cube
 }
 
@@ -205,7 +205,7 @@ for ((qmmmstep=$QMMMINISTEP; qmmmstep<=$QMMMFINSTEP; qmmmstep++));do
   awk -v "geo=$qmxyz" -v "dispf=$force" '{if($0=="###qmxyz") {print geo} else if($0=="###dispf") {print dispf} else {print $0} }' $QMIN > pw.in
   if [ $qmmmstep -gt 0 -a $firstrun -eq 0 ]; then 
     sed -i "s/.*\&CONTROL.*/&\ndft_ces = .true./" pw.in
-    sed -i "s/.*\&CONTROL.*/&\nrho_ces = '.\/MOBILE_final.cube'/" pw.in
+    sed -i "s/.*\&CONTROL.*/&\nrho_ces = '.\/pq+bq.cube'/" pw.in
     sed -i "s/.*\&CONTROL.*/&\npauli_rep_ces = '.\/repA.cube'/" pw.in
     sed -i "s/.*\&ELECTRONS.*/&\nstartingwfc = 'file'/" pw.in
     sed -i "s/.*\&ELECTRONS.*/&\nstartingpot = 'file'/" pw.in
@@ -226,7 +226,7 @@ for ((qmmmstep=$QMMMINISTEP; qmmmstep<=$QMMMFINSTEP; qmmmstep++));do
   firstrun=0
   
   if [ $qmmmstep -gt 0 ]; then
-    cp mm_$((qmmmstep-1))/MOBILE_final.cube ./
+    cp mm_$((qmmmstep-1))/pq+bq.cube ./
     cp mm_$((qmmmstep-1))/empty.cube ./
     cp mm_$((qmmmstep-1))/repA.cube ./
   fi
@@ -278,7 +278,7 @@ for ((qmmmstep=$QMMMINISTEP; qmmmstep<=$QMMMFINSTEP; qmmmstep++));do
 			done
 				awk -v "geo=$qmxyz_nonortho" -v "dispf=$force_nonortho" '{if($0=="###qmxyz") {print geo} else if($0=="###dispf") {print dispf} else {print $0} }' $QMIN > pw.nonortho.in
 				sed -i "s/.*\&CONTROL.*/&\ndft_ces = .true./" pw.nonortho.in
-				sed -i "s/.*\&CONTROL.*/&\nrho_ces = '.\/MOBILE_final.cube'/" pw.nonortho.in
+				sed -i "s/.*\&CONTROL.*/&\nrho_ces = '.\/pq+bq.cube'/" pw.nonortho.in
 				sed -i "s/.*\&CONTROL.*/&\npauli_rep_ces = '.\/empty.cube'/" pw.nonortho.in
 				mpirun -np $NP $QEPW < pw.nonortho.in > pw.nonortho.out
 		fi
@@ -396,9 +396,9 @@ sed -i "s/.*#CUBEPOSITION.*/&\ngrid\t\t ${cubeio} /" in.lammps
   post_dipole
 	Blur_MM
   if [ "$DIPOLECORR" == "yes" ]; then
-    $MDDIPOLE MOBILE_final.cube $DIPOLEDIR $DIPOLEPOS
+    $MDDIPOLE pq+bq.cube $DIPOLEDIR $DIPOLEPOS
   fi
-  cp dispf.ave repA.cube in.lammps* empty.cube MOBILE_final.cube *.lammpstrj $LAMMPSRESTART lammps.*.out mm_$qmmmstep
+  cp dispf.ave repA.cube in.lammps* empty.cube pq+bq.cube *.lammpstrj $LAMMPSRESTART lammps.*.out mm_$qmmmstep
 
 done # qmmm loop
 
