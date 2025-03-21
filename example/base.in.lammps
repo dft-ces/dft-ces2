@@ -43,8 +43,13 @@ compute     	edisp all pair bjdisp
 bond_coeff	1 450 0.9572
 angle_coeff	1 55 104.52
 
+<<<<<<< HEAD
 fix             hGrid PROTON gridforce -1 16 0 H tip4p 1 2 0.9572 104.52 0.125 1
 fix             oGrid OXYGEN gridforce -1 16 1 O tip4p 1 2 0.9572 104.52 0.125 1
+=======
+fix             hGrid PROTON gridforce -1 16 0 H TIP4P 1 2 0.9572 104.52 0.125 1
+fix             oGrid OXYGEN gridforce -1 16 1 O TIP4P 1 2 0.9572 104.52 0.125 1
+>>>>>>> 31a90591bbc8a3e9f810f10d6000293108a9f1c0
 fix_modify      oGrid energy yes             # include grid energy to lammps total energy
 fix_modify      hGrid energy yes             # include grid energy to lammps total energy
 variable        Egrid_H equal f_hGrid[1]
