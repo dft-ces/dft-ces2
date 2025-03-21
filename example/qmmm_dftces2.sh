@@ -7,6 +7,7 @@ QMRELAX_HIGH=7 # QM atoms below the specified value are relaxed in unit of Angs
 QMMMINISTEP=0 # no of initial QMMM step
 QMMMFINSTEP=6 # no of final QMMM step
 QMMAXSTEP="5" # QM max trial for "opt"
+ECONV="0.1" # QM/MM convergence energy criteria
 SUPERCELL=(4 4 1) # (x y z)
 SUPERCELLFACTOR=`echo ${SUPERCELL[0]}*${SUPERCELL[1]}*${SUPERCELL[2]} | bc`
 DIPOLECORR="yes" # dipole correction for MM charge density
@@ -38,7 +39,6 @@ cube_coul_QM=(solute.pot.cube) # v_q^A
 cube_rho_QM=(solute.rho.cube) # rho^A
 cube_QM_rho_hat=(c_rho_hydrogen.cube c_rho_oxygen.cube) # \hat rho^A sigma_b
 cube_output_MM=(hydrogen.cube oxygen.cube) # rho_q^B
-
 cube_output_PolarDen=(px.cube py.cube pz.cube) # Polarization density
 TIP4Pinvolved=(1 1) # when TIP4P water is involved in the syste, first: 1, second: order of output MM cube for TIP4P oxygen 
 if [ ${TIP4Pinvolved[0]} -eq 1 ]; then
@@ -48,9 +48,9 @@ cubeinum=`echo "${#cube_coul_QM[@]}+${#cube_QM_rho_hat[@]}" | bc`
 cubeonum=`echo "${#cube_output_MM[@]}+${#cube_output_PolarDen[@]}+${#cube_output_TIP4P_O[@]}" | bc`
 cubeio=`echo $cubeinum $cubeonum ${cube_coul_QM[@]} ${cube_QM_rho_hat[@]} ${cube_output_MM[@]} ${cube_output_PolarDen[@]} ${cube_output_TIP4P_O[@]}`
 cubeioequil=`echo $cubeinum 0 ${cube_coul_QM[@]} ${cube_QM_rho_hat[@]}`
-ATOMrepANAME=(H O N S C Li Na K Rb Cs He Ne Ar Kr Xe F Cl Br I P)
-ATOMrepA=(1.381 15.56 10.51 3.39 5.15 11.30 24.82 23.51 19.26 11.23 23.78 22.01 11.08 7.617 4.532 2.600 2.694 2.175 1.938 4.38)
-ATOMalpha=(1.693 5.20 7.25 19.5 11.7 0.193 0.93 5.05 8.32 15.0 1.38 2.67 11.1 16.8 27.2 15.0 30.3 42.8 61.7 24.8)
+ATOMrepANAME=(H O N S C Li Na K Rb Cs He Ne Ar Kr Xe F Cl Br I)
+ATOMrepA=(1.381 15.56 10.51 3.39 5.15 11.30 24.82 23.51 19.26 11.23 23.78 22.01 11.08 7.617 4.532 2.600 2.694 2.175 1.938)
+ATOMalpha=(1.693 5.20 7.25 19.5 11.7 0.193 0.93 5.05 8.32 15.0 1.38 2.67 11.1 16.8 27.2 15.0 30.3 42.8 61.7)
 PI=3.141592
 temprep=${cube_output_MM}
 tempalpha=${cube_outpt_MM}
@@ -399,6 +399,20 @@ sed -i "s/.*#CUBEPOSITION.*/&\ngrid\t\t ${cubeio} /" in.lammps
     $MDDIPOLE MOBILE_final.cube $DIPOLEDIR $DIPOLEPOS
   fi
   cp dispf.ave repA.cube in.lammps* empty.cube MOBILE_final.cube *.lammpstrj $LAMMPSRESTART lammps.*.out mm_$qmmmstep
+
+# Convergence Test
+if [ $qmmmstep -gt 0 ]; then
+pwii=`grep '!' qm_$qmmmstep/pw.out | tail -n 1 | awk '{print $5}'`
+pwi=`grep '!' qm_$((qmmmstep - 1))/pw.out | tail -n 1 | awk '{print $5}'`
+extii=`grep "E_ces" qm_$qmmmstep/pw.out | tail -n 1 | awk '{print $6}'`
+exti=`grep "E_ces" qm_$((qmmmstep - 1))/pw.out | tail -n 1 | awk '{print $6}'`
+var=`echo $pwii $pwi $extii $exti | awk '{printf("%f \n",($1-$2-$3+$4)*313.7545)}'`
+
+	if (( $(echo "$ECONV > $var" | bc -l) )); then
+		echo "DFT-CES2 calculation has been converged" 
+		break
+	fi
+fi
 
 done # qmmm loop
 

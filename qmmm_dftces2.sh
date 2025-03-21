@@ -7,6 +7,7 @@ QMRELAX_HIGH=7 # QM atoms below the specified value are relaxed in unit of Angs
 QMMMINISTEP=0 # no of initial QMMM step
 QMMMFINSTEP=6 # no of final QMMM step
 QMMAXSTEP="5" # QM max trial for "opt"
+ECONV="0.1" # QM/MM convergence energy criteria
 SUPERCELL=(4 4 1) # (x y z)
 SUPERCELLFACTOR=`echo ${SUPERCELL[0]}*${SUPERCELL[1]}*${SUPERCELL[2]} | bc`
 DIPOLECORR="yes" # dipole correction for MM charge density
@@ -38,7 +39,6 @@ cube_coul_QM=(solute.pot.cube) # v_q^A
 cube_rho_QM=(solute.rho.cube) # rho^A
 cube_QM_rho_hat=(c_rho_hydrogen.cube c_rho_oxygen.cube) # \hat rho^A sigma_b
 cube_output_MM=(hydrogen.cube oxygen.cube) # rho_q^B
-
 cube_output_PolarDen=(px.cube py.cube pz.cube) # Polarization density
 TIP4Pinvolved=(1 1) # when TIP4P water is involved in the syste, first: 1, second: order of output MM cube for TIP4P oxygen 
 if [ ${TIP4Pinvolved[0]} -eq 1 ]; then
@@ -399,6 +399,20 @@ sed -i "s/.*#CUBEPOSITION.*/&\ngrid\t\t ${cubeio} /" in.lammps
     $MDDIPOLE MOBILE_final.cube $DIPOLEDIR $DIPOLEPOS
   fi
   cp dispf.ave repA.cube in.lammps* empty.cube MOBILE_final.cube *.lammpstrj $LAMMPSRESTART lammps.*.out mm_$qmmmstep
+
+# Convergence Test
+if [ $qmmmstep -gt 0 ]; then
+pwii=`grep '!' qm_$qmmmstep/pw.out | tail -n 1 | awk '{print $5}'`
+pwi=`grep '!' qm_$((qmmmstep - 1))/pw.out | tail -n 1 | awk '{print $5}'`
+extii=`grep "E_ces" qm_$qmmmstep/pw.out | tail -n 1 | awk '{print $6}'`
+exti=`grep "E_ces" qm_$((qmmmstep - 1))/pw.out | tail -n 1 | awk '{print $6}'`
+var=`echo $pwii $pwi $extii $exti | awk '{printf("%f \n",($1-$2-$3+$4)*313.7545)}'`
+
+	if (( $(echo "$ECONV > $var" | bc -l) )); then
+		echo "DFT-CES2 calculation has been converged" 
+		break
+	fi
+fi
 
 done # qmmm loop
 
