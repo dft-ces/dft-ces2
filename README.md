@@ -10,7 +10,7 @@ For LAMMPS,
 
 &gt;&gt; ls <br /> src etc
 
-&gt;&gt; patch -p0 < patch_DFT-CES2
+&gt;&gt; patch -p0 < lammps.patch
 
 <br />
 For QE,
