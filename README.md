@@ -14,7 +14,7 @@ For LAMMPS 11 Aug 2017,
 
 For LAMMPS 2 Aug 2023,
 
-&gt;&gt; pwd <br /> $USER/lammps-11Aug17
+&gt;&gt; pwd <br /> $USER/lammps-2Aug2023
 
 &gt;&gt; ls <br /> src etc
 
