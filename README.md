@@ -4,13 +4,21 @@ doi.org/
 
 ## How to use patch files
 ### To edit the original source codes from Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS) and quantum-espresso (QE)
-For LAMMPS,
+For LAMMPS 11 Aug 2017,
 
 &gt;&gt; pwd <br /> $USER/lammps-11Aug17
 
 &gt;&gt; ls <br /> src etc
 
 &gt;&gt; patch -p0 < lammps.patch
+
+For LAMMPS 2 Aug 2023,
+
+&gt;&gt; pwd <br /> $USER/lammps-11Aug17
+
+&gt;&gt; ls <br /> src etc
+
+&gt;&gt; patch -p0 < lammps-2Aug2023.patch
 
 <br />
 For QE,
