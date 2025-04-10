@@ -1,6 +1,6 @@
 # DFT-CES2
 ### Density functional theory in classical explicit solvents 2
-doi.org/
+doi.org/10.1021/jacsau.5c00176
 
 ## How to use patch files
 ### To edit the original source codes from Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS) and quantum-espresso (QE)
