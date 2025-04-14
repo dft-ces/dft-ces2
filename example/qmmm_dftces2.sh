@@ -235,7 +235,7 @@ for ((qmmmstep=$QMMMINISTEP; qmmmstep<=$QMMMFINSTEP; qmmmstep++));do
   finished=""
   for ((i=0; i<$QMMAXSTEP; i++));do
     if [ $initialqm -eq 0 ]; then
-      rm toy
+      rm meanforce
                         mpirun -np $NP $QEPW < pw.in > pw.out
       if [ "$QMTYPE" == "scf" ]; then
         finished=`grep "JOB DONE" pw.out`
