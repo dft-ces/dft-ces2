@@ -91,7 +91,8 @@ Blur_MM (){
 	done
 
         list=$(ls c_rep_*.cube) #convoluted repulsion potential from mm; fixed external potential by mm
-        $CUBEADD ${#list[@]} ${list[@]}
+	nlist=$(ls -1 c_rep_*.cube | wc -l)
+        $CUBEADD ${nlist} ${list[@]}
         mv add.cube repA.cube
 
 }
