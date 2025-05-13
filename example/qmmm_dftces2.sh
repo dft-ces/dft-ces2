@@ -53,7 +53,7 @@ ATOMrepA=(1.381 15.56 10.51 3.39 5.15 11.30 24.82 23.51 19.26 11.23 23.78 22.01 
 ATOMalpha=(1.693 5.20 7.25 19.5 11.7 0.193 0.93 5.05 8.32 15.0 1.38 2.67 11.1 16.8 27.2 15.0 30.3 42.8 61.7)
 PI=3.141592
 temprep=${cube_output_MM}
-tempalpha=${cube_outpt_MM}
+tempalpha=${cube_output_MM}
 for ((i=0; i<${#MMrepA[@]}; i++));do
   for ((j=0; j<${#ATOMrepANAME[@]}; j++));do
 		if [ "${ATOMrepANAME[$j]}" == "${MMrepA[$i]}" ];then 
