@@ -66,7 +66,7 @@ done
 Blur_MM (){
 	MMpartial=""
 	natomtype=`grep 'atom types' $1 | awk '{print $1}'`
-	nqmtype=${#QMLMPTYPE}
+	nqmtype=${#QMLMPTYPE[@]}
 	nmmtype=$((natomtype-nqmtype))
 	line=`grep -n 'Atoms' $1 | cut -f1 -d :`
 	for i in $(seq 1 ${nmmtype});do
