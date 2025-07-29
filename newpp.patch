@@ -1,0 +1,129 @@
+diff -urN PP/examples/WorkFct_example/reference/cube.z.avg PP_DFT-CES2/examples/WorkFct_example/reference/cube.z.avg
+--- PP/examples/WorkFct_example/reference/cube.z.avg	1970-01-01 09:00:00.000000000 +0900
++++ PP_DFT-CES2/examples/WorkFct_example/reference/cube.z.avg	2025-07-30 04:50:36.698085278 +0900
+@@ -0,0 +1 @@
++0.000000 0.411999
+Binary files PP/src/add_shift_cc.o and PP_DFT-CES2/src/add_shift_cc.o differ
+Binary files PP/src/add_shift_lc.o and PP_DFT-CES2/src/add_shift_lc.o differ
+Binary files PP/src/add_shift_us.o and PP_DFT-CES2/src/add_shift_us.o differ
+Binary files PP/src/addusdens1d.o and PP_DFT-CES2/src/addusdens1d.o differ
+Binary files PP/src/atomic_wfc_nc_proj.o and PP_DFT-CES2/src/atomic_wfc_nc_proj.o differ
+Binary files PP/src/average.o and PP_DFT-CES2/src/average.o differ
+Binary files PP/src/average.x and PP_DFT-CES2/src/average.x differ
+Binary files PP/src/bands.o and PP_DFT-CES2/src/bands.o differ
+Binary files PP/src/bands.x and PP_DFT-CES2/src/bands.x differ
+Binary files PP/src/bgw2pw.o and PP_DFT-CES2/src/bgw2pw.o differ
+Binary files PP/src/bgw2pw.x and PP_DFT-CES2/src/bgw2pw.x differ
+Binary files PP/src/cft.o and PP_DFT-CES2/src/cft.o differ
+Binary files PP/src/chdens_bspline.o and PP_DFT-CES2/src/chdens_bspline.o differ
+Binary files PP/src/chdens_module.mod and PP_DFT-CES2/src/chdens_module.mod differ
+Binary files PP/src/chdens_module.o and PP_DFT-CES2/src/chdens_module.o differ
+Binary files PP/src/compute_ppsi.o and PP_DFT-CES2/src/compute_ppsi.o differ
+Binary files PP/src/compute_sigma_avg.o and PP_DFT-CES2/src/compute_sigma_avg.o differ
+Binary files PP/src/cube.o and PP_DFT-CES2/src/cube.o differ
+Binary files PP/src/d_matrix_nc.o and PP_DFT-CES2/src/d_matrix_nc.o differ
+Binary files PP/src/d_matrix_so.o and PP_DFT-CES2/src/d_matrix_so.o differ
+Binary files PP/src/do_initial_state.o and PP_DFT-CES2/src/do_initial_state.o differ
+Binary files PP/src/dosg.o and PP_DFT-CES2/src/dosg.o differ
+Binary files PP/src/do_shift_ew.o and PP_DFT-CES2/src/do_shift_ew.o differ
+Binary files PP/src/dos.o and PP_DFT-CES2/src/dos.o differ
+Binary files PP/src/dos.x and PP_DFT-CES2/src/dos.x differ
+Binary files PP/src/elf.o and PP_DFT-CES2/src/elf.o differ
+Binary files PP/src/epsilon.o and PP_DFT-CES2/src/epsilon.o differ
+Binary files PP/src/epsilon.x and PP_DFT-CES2/src/epsilon.x differ
+Binary files PP/src/fermi_proj.o and PP_DFT-CES2/src/fermi_proj.o differ
+Binary files PP/src/fermi_proj_routines.mod and PP_DFT-CES2/src/fermi_proj_routines.mod differ
+Binary files PP/src/fermi_proj.x and PP_DFT-CES2/src/fermi_proj.x differ
+Binary files PP/src/fermisurface.o and PP_DFT-CES2/src/fermisurface.o differ
+Binary files PP/src/fermisurfer_common.mod and PP_DFT-CES2/src/fermisurfer_common.mod differ
+Binary files PP/src/fermisurfer_common.o and PP_DFT-CES2/src/fermisurfer_common.o differ
+Binary files PP/src/fermi_velocity.o and PP_DFT-CES2/src/fermi_velocity.o differ
+Binary files PP/src/fermi_velocity.x and PP_DFT-CES2/src/fermi_velocity.x differ
+Binary files PP/src/fs.mod and PP_DFT-CES2/src/fs.mod differ
+Binary files PP/src/fs.x and PP_DFT-CES2/src/fs.x differ
+Binary files PP/src/ggen1d.o and PP_DFT-CES2/src/ggen1d.o differ
+Binary files PP/src/grid_module.mod and PP_DFT-CES2/src/grid_module.mod differ
+Binary files PP/src/importexport_binary.o and PP_DFT-CES2/src/importexport_binary.o differ
+Binary files PP/src/importexport_binary.x and PP_DFT-CES2/src/importexport_binary.x differ
+Binary files PP/src/initial_state.o and PP_DFT-CES2/src/initial_state.o differ
+Binary files PP/src/initial_state.x and PP_DFT-CES2/src/initial_state.x differ
+Binary files PP/src/io_base_export.mod and PP_DFT-CES2/src/io_base_export.mod differ
+Binary files PP/src/libpp.a and PP_DFT-CES2/src/libpp.a differ
+Binary files PP/src/local_dos1d.o and PP_DFT-CES2/src/local_dos1d.o differ
+Binary files PP/src/local_dos_mag.o and PP_DFT-CES2/src/local_dos_mag.o differ
+Binary files PP/src/local_dos.o and PP_DFT-CES2/src/local_dos.o differ
+Binary files PP/src/molecularpdos.o and PP_DFT-CES2/src/molecularpdos.o differ
+Binary files PP/src/molecularpdos.x and PP_DFT-CES2/src/molecularpdos.x differ
+Binary files PP/src/openfil_pp.o and PP_DFT-CES2/src/openfil_pp.o differ
+Binary files PP/src/open_grid.o and PP_DFT-CES2/src/open_grid.o differ
+Binary files PP/src/open_grid.x and PP_DFT-CES2/src/open_grid.x differ
+Binary files PP/src/partialdos.o and PP_DFT-CES2/src/partialdos.o differ
+Binary files PP/src/pawplot.o and PP_DFT-CES2/src/pawplot.o differ
+Binary files PP/src/pawplot.x and PP_DFT-CES2/src/pawplot.x differ
+Binary files PP/src/paw_postproc.mod and PP_DFT-CES2/src/paw_postproc.mod differ
+Binary files PP/src/paw_postproc_.mod and PP_DFT-CES2/src/paw_postproc_.mod differ
+Binary files PP/src/paw_postproc.o and PP_DFT-CES2/src/paw_postproc.o differ
+Binary files PP/src/plan_avg.o and PP_DFT-CES2/src/plan_avg.o differ
+Binary files PP/src/plan_avg.x and PP_DFT-CES2/src/plan_avg.x differ
+Binary files PP/src/plotband.o and PP_DFT-CES2/src/plotband.o differ
+Binary files PP/src/plotband.x and PP_DFT-CES2/src/plotband.x differ
+Binary files PP/src/plotproj.o and PP_DFT-CES2/src/plotproj.o differ
+Binary files PP/src/plotproj.x and PP_DFT-CES2/src/plotproj.x differ
+Binary files PP/src/plotrho.o and PP_DFT-CES2/src/plotrho.o differ
+Binary files PP/src/plotrho.x and PP_DFT-CES2/src/plotrho.x differ
+Binary files PP/src/plot_whole_cell.o and PP_DFT-CES2/src/plot_whole_cell.o differ
+Binary files PP/src/pmw.x and PP_DFT-CES2/src/pmw.x differ
+Binary files PP/src/poormanwannier.o and PP_DFT-CES2/src/poormanwannier.o differ
+Binary files PP/src/postproc.o and PP_DFT-CES2/src/postproc.o differ
+Binary files PP/src/pp_module.mod and PP_DFT-CES2/src/pp_module.mod differ
+Binary files PP/src/pp.x and PP_DFT-CES2/src/pp.x differ
+Binary files PP/src/projections_ldos.mod and PP_DFT-CES2/src/projections_ldos.mod differ
+Binary files PP/src/projections.mod and PP_DFT-CES2/src/projections.mod differ
+Binary files PP/src/projections_mod.o and PP_DFT-CES2/src/projections_mod.o differ
+Binary files PP/src/projwfc_box.o and PP_DFT-CES2/src/projwfc_box.o differ
+Binary files PP/src/projwfc.o and PP_DFT-CES2/src/projwfc.o differ
+Binary files PP/src/projwfc.x and PP_DFT-CES2/src/projwfc.x differ
+diff -urN PP/src/punch_plot.f90 PP_DFT-CES2/src/punch_plot.f90
+--- PP/src/punch_plot.f90	2024-04-23 22:30:37.867406696 +0900
++++ PP_DFT-CES2/src/punch_plot.f90	2025-07-30 04:50:34.980077978 +0900
+@@ -214,8 +214,10 @@
+         nspin = 1
+      ENDIF
+      CALL v_h (rho%of_g, ehart, charge, raux)
+-     IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
+-
++     !IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
++     IF (tefield.and.dipfield) THEN
++        WRITE(stdout,*) "V_hartree and V_bare is shown but V_saw is printed in pw by jay"
++     ENDIF
+   ELSEIF (plot_num == 12) THEN
+ 
+      raux=0.d0
+Binary files PP/src/punch_plot.o and PP_DFT-CES2/src/punch_plot.o differ
+Binary files PP/src/pw2bgw.o and PP_DFT-CES2/src/pw2bgw.o differ
+Binary files PP/src/pw2bgw.x and PP_DFT-CES2/src/pw2bgw.x differ
+Binary files PP/src/pw2gw.o and PP_DFT-CES2/src/pw2gw.o differ
+Binary files PP/src/pw2gw.x and PP_DFT-CES2/src/pw2gw.x differ
+Binary files PP/src/pw2wannier90.o and PP_DFT-CES2/src/pw2wannier90.o differ
+Binary files PP/src/pw2wannier90.x and PP_DFT-CES2/src/pw2wannier90.x differ
+Binary files PP/src/pw_export.o and PP_DFT-CES2/src/pw_export.o differ
+Binary files PP/src/pw_export.x and PP_DFT-CES2/src/pw_export.x differ
+Binary files PP/src/smallgk.o and PP_DFT-CES2/src/smallgk.o differ
+Binary files PP/src/spinsym.o and PP_DFT-CES2/src/spinsym.o differ
+Binary files PP/src/stm.o and PP_DFT-CES2/src/stm.o differ
+Binary files PP/src/stop_pp.o and PP_DFT-CES2/src/stop_pp.o differ
+Binary files PP/src/sumpdos.o and PP_DFT-CES2/src/sumpdos.o differ
+Binary files PP/src/sumpdos.x and PP_DFT-CES2/src/sumpdos.x differ
+Binary files PP/src/sym_band.o and PP_DFT-CES2/src/sym_band.o differ
+Binary files PP/src/wannier_ham.o and PP_DFT-CES2/src/wannier_ham.o differ
+Binary files PP/src/wannier_ham.x and PP_DFT-CES2/src/wannier_ham.x differ
+Binary files PP/src/wannier.mod and PP_DFT-CES2/src/wannier.mod differ
+Binary files PP/src/wannier_plot.o and PP_DFT-CES2/src/wannier_plot.o differ
+Binary files PP/src/wannier_plot.x and PP_DFT-CES2/src/wannier_plot.x differ
+Binary files PP/src/wfck2r.o and PP_DFT-CES2/src/wfck2r.o differ
+Binary files PP/src/wfck2r.x and PP_DFT-CES2/src/wfck2r.x differ
+Binary files PP/src/work_function.o and PP_DFT-CES2/src/work_function.o differ
+Binary files PP/src/write_hamiltonians.o and PP_DFT-CES2/src/write_hamiltonians.o differ
+Binary files PP/src/write_io_header.o and PP_DFT-CES2/src/write_io_header.o differ
+Binary files PP/src/write_p_avg.o and PP_DFT-CES2/src/write_p_avg.o differ
+Binary files PP/src/write_proj.o and PP_DFT-CES2/src/write_proj.o differ

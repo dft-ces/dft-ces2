@@ -1,0 +1,1387 @@
+Binary files PW/src/a2f.mod and PW_DFT-CES2/src/a2f.mod differ
+Binary files PW/src/a2fmod.o and PW_DFT-CES2/src/a2fmod.o differ
+Binary files PW/src/acfdt_ener.mod and PW_DFT-CES2/src/acfdt_ener.mod differ
+Binary files PW/src/acfdt_in_pw.o and PW_DFT-CES2/src/acfdt_in_pw.o differ
+Binary files PW/src/add_bfield.o and PW_DFT-CES2/src/add_bfield.o differ
+diff -urN PW/src/add_efield.f90 PW_DFT-CES2/src/add_efield.f90
+--- PW/src/add_efield.f90	2024-04-23 22:30:32.631361648 +0900
++++ PW_DFT-CES2/src/add_efield.f90	2025-07-30 04:51:43.724370078 +0900
+@@ -59,6 +59,11 @@
+   USE fft_base,      ONLY : dfftp
+   USE mp,            ONLY : mp_bcast, mp_sum
+   USE control_flags, ONLY : iverbosity
++! DFT-CES start
++  USE scf,           ONLY : ext
++  USE input_parameters, ONLY : dft_ces
++  USE scatter_mod, ONLY : gather_grid
++! DFT-CES end
+   
+   IMPLICIT NONE
+   !
+@@ -74,9 +79,17 @@
+   INTEGER :: idx,  i, j, k, j0, k0
+   INTEGER :: ir, na, ipol
+   REAL(DP) :: length, vamp, value, sawarg, bmod
++! DFT-CES start
++  REAL(DP) :: ces_dipole
++! DFT-CES end
+ 
+   LOGICAL :: first=.TRUE.
+   SAVE first
++  !
++  REAL(DP), ALLOCATABLE :: v_ext_r(:,:), ext_write_r(:), v_xyz(:,:,:)
++  INTEGER :: i1, i2, i3, ounit
++  INTEGER, EXTERNAL :: find_free_unit
++  !
+   
+   !---------------------
+   !  Execution control
+@@ -102,6 +115,9 @@
+   tot_dipole = 0._dp
+   el_dipole  = 0._dp
+   ion_dipole = 0._dp
++! DFT-CES start
++  ces_dipole = 0._dp
++! DFT-CES end
+   
+   !---------------------
+   !  Calculate dipole
+@@ -113,8 +129,12 @@
+   !
+      CALL compute_el_dip(emaxpos, eopreg, edir, rho, el_dipole)
+      CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
+-    
+-     tot_dipole  = -el_dipole + ion_dipole
++! DFT-CES start
++     if (dft_ces) then
++       CALL compute_el_dip(emaxpos, eopreg, edir, ext%of_r, ces_dipole)
++     endif
++     tot_dipole  = -el_dipole + ion_dipole -ces_dipole
++! DFT-CES end
+      CALL mp_bcast(tot_dipole, 0, intra_image_comm)
+   !  
+   !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
+@@ -182,6 +202,14 @@
+ 
+        IF (dipfield) then
+           WRITE( stdout,'(/5x,"Computed dipole along edir(",i1,") : ")' ) edir
++! DFT-CES start
++          if (dft_ces) then
++            WRITE( stdout, '(5X,"System dipole  ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
++     (-el_dipole+ion_dipole)*(omega/fpi), (-el_dipole+ion_dipole)*(omega/fpi)*au_debye
++            WRITE( stdout, '(8X,"CES dipole  ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
++                           -ces_dipole*(omega/fpi), -(ces_dipole*(omega/fpi)*au_debye)
++          endif
++! DFT-CES end
+ 
+           !
+           !  If verbose prints also the different components
+@@ -223,6 +251,8 @@
+ 
+   !
+   ! Loop in the charge array
++  !
++  ALLOCATE( v_ext_r(dfftp%nnr,nspin)) ! ### added for external potential write
+   j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
+      !
+@@ -248,12 +278,43 @@
+      value = e2*(eamp - tot_dipole)*saw(emaxpos,eopreg,sawarg) * (alat/bmod)
+ 
+      vpoten(ir) = vpoten(ir) + value
++     v_ext_r(ir,1) = value ! ### added for external potential write
+ 
+   END DO
+   
++  ALLOCATE( ext_write_r(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
++  ALLOCATE( v_xyz(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x) )
++#if defined(__MPI)
++  CALL gather_grid(dfftp, v_ext_r(:,1), ext_write_r)
++#else
++     ext_write_r = v_ext_r(:,1)
++#endif
++  !
++  if (ionode) then
++     ounit = find_free_unit()
++     OPEN (unit=ounit, file='v_saw.cube',form='formatted',status='unknown')
++     !
++     i=0
++     do i3=1,dfftp%nr3x
++        do i2=1,dfftp%nr2x
++           do i1=1,dfftp%nr1x
++              i=i+1
++              v_xyz(i1,i2,i3) = ext_write_r(i)
++           end do
++        end do
++     end do
++     CALL write_cubefile_diag (v_xyz, ounit)
++     close(ounit)
++     write( stdout,*) "                                  "
++     WRITE( stdout,*)'  ## Saw potential for dipc (v_saw.cube) has been written.## '
++  end if
++  !
++  DEALLOCATE(v_ext_r)
++  DEALLOCATE(ext_write_r)
++  DEALLOCATE(v_xyz)
++  !
+   
+   RETURN
+ 
+ END SUBROUTINE add_efield
+ ! 
+-
+Binary files PW/src/add_efield.o and PW_DFT-CES2/src/add_efield.o differ
+Binary files PW/src/add_gatefield.o and PW_DFT-CES2/src/add_gatefield.o differ
+Binary files PW/src/add_paw_to_deeq.o and PW_DFT-CES2/src/add_paw_to_deeq.o differ
+Binary files PW/src/add_qexsd_step.o and PW_DFT-CES2/src/add_qexsd_step.o differ
+Binary files PW/src/addusdens.o and PW_DFT-CES2/src/addusdens.o differ
+Binary files PW/src/addusforce.o and PW_DFT-CES2/src/addusforce.o differ
+Binary files PW/src/addusstress.o and PW_DFT-CES2/src/addusstress.o differ
+Binary files PW/src/add_vhub_to_deeq.o and PW_DFT-CES2/src/add_vhub_to_deeq.o differ
+Binary files PW/src/add_vuspsi.o and PW_DFT-CES2/src/add_vuspsi.o differ
+diff -urN PW/src/allocate_fft.f90 PW_DFT-CES2/src/allocate_fft.f90
+--- PW/src/allocate_fft.f90	2024-04-23 22:30:34.012373530 +0900
++++ PW_DFT-CES2/src/allocate_fft.f90	2025-07-30 04:51:43.728370095 +0900
+@@ -23,6 +23,9 @@
+   USE lsda_mod,  ONLY : nspin
+   USE spin_orb,  ONLY : domag
+   USE scf,       ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
++! DFT-CES start
++                        ext, ext_ion, ext_rep, &
++! DFT-CES end
+                         kedtau, create_scf_type
+   USE control_flags, ONLY : gamma_only
+   USE noncollin_module, ONLY : pointlist, factlist, r_loc, &
+@@ -56,6 +59,11 @@
+   CALL create_scf_type(rho)
+   CALL create_scf_type(v,    do_not_allocate_becsum = .true.)
+   CALL create_scf_type(vnew, do_not_allocate_becsum = .true.)
++! DFT-CES start
++  CALL create_scf_type(ext,  do_not_allocate_becsum = .true.)
++  CALL create_scf_type(ext_ion,  do_not_allocate_becsum = .true.)
++  CALL create_scf_type(ext_rep,  do_not_allocate_becsum = .true.)
++! DFT-CES end
+   ALLOCATE (vltot( dfftp%nnr))
+   ALLOCATE (rho_core( dfftp%nnr))
+   IF (dft_is_meta() ) THEN
+Binary files PW/src/allocate_fft.o and PW_DFT-CES2/src/allocate_fft.o differ
+Binary files PW/src/allocate_locpot.o and PW_DFT-CES2/src/allocate_locpot.o differ
+Binary files PW/src/allocate_nlpot.o and PW_DFT-CES2/src/allocate_nlpot.o differ
+Binary files PW/src/allocate_wfc.o and PW_DFT-CES2/src/allocate_wfc.o differ
+Binary files PW/src/atomic_rho.o and PW_DFT-CES2/src/atomic_rho.o differ
+Binary files PW/src/atomic_wfc_mod.o and PW_DFT-CES2/src/atomic_wfc_mod.o differ
+Binary files PW/src/atomic_wfc.o and PW_DFT-CES2/src/atomic_wfc.o differ
+Binary files PW/src/average_pp.o and PW_DFT-CES2/src/average_pp.o differ
+Binary files PW/src/basis.mod and PW_DFT-CES2/src/basis.mod differ
+Binary files PW/src/bp_calc_btq.o and PW_DFT-CES2/src/bp_calc_btq.o differ
+Binary files PW/src/bp_c_phase.o and PW_DFT-CES2/src/bp_c_phase.o differ
+Binary files PW/src/bp.mod and PW_DFT-CES2/src/bp.mod differ
+Binary files PW/src/bp_mod.o and PW_DFT-CES2/src/bp_mod.o differ
+Binary files PW/src/bp_qvan3.o and PW_DFT-CES2/src/bp_qvan3.o differ
+Binary files PW/src/bp_strings.o and PW_DFT-CES2/src/bp_strings.o differ
+Binary files PW/src/buffers.mod and PW_DFT-CES2/src/buffers.mod differ
+Binary files PW/src/buffers.o and PW_DFT-CES2/src/buffers.o differ
+Binary files PW/src/buiol.mod and PW_DFT-CES2/src/buiol.mod differ
+Binary files PW/src/c_bands.o and PW_DFT-CES2/src/c_bands.o differ
+Binary files PW/src/cdiagh.o and PW_DFT-CES2/src/cdiagh.o differ
+Binary files PW/src/cellmd.mod and PW_DFT-CES2/src/cellmd.mod differ
+diff -urN PW/src/clean_pw.f90 PW_DFT-CES2/src/clean_pw.f90
+--- PW/src/clean_pw.f90	2024-04-23 22:30:34.062373960 +0900
++++ PW_DFT-CES2/src/clean_pw.f90	2025-07-30 04:51:44.603373813 +0900
+@@ -34,6 +34,9 @@
+   USE wvfct,                ONLY : g2kin, et, wg, btype
+   USE force_mod,            ONLY : force
+   USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
++! DFT-CES start
++                                   ext, ext_ion, ext_rep, tau_ini, &
++! DFT-CES end
+                                    vrs, kedtau, destroy_scf_type, vnew
+   USE symm_base,            ONLY : irt
+   USE symme,                ONLY : sym_rho_deallocate
+@@ -126,6 +129,12 @@
+   call destroy_scf_type(rho)
+   call destroy_scf_type(v)
+   call destroy_scf_type(vnew)
++! DFT-CES start
++  call destroy_scf_type(ext)
++  call destroy_scf_type(ext_ion)
++  call destroy_scf_type(ext_rep)
++  IF ( ALLOCATED( tau_ini) )     DEALLOCATE( tau_ini)
++! DFT-CES end
+   IF ( ALLOCATED( kedtau ) )     DEALLOCATE( kedtau )
+   IF ( ALLOCATED( vltot ) )      DEALLOCATE( vltot )
+   IF ( ALLOCATED( rho_core ) )   DEALLOCATE( rho_core )
+Binary files PW/src/clean_pw.o and PW_DFT-CES2/src/clean_pw.o differ
+Binary files PW/src/close_files.o and PW_DFT-CES2/src/close_files.o differ
+Binary files PW/src/compute_becsum.o and PW_DFT-CES2/src/compute_becsum.o differ
+Binary files PW/src/compute_deff.o and PW_DFT-CES2/src/compute_deff.o differ
+Binary files PW/src/compute_dip.o and PW_DFT-CES2/src/compute_dip.o differ
+Binary files PW/src/compute_qdipol.o and PW_DFT-CES2/src/compute_qdipol.o differ
+Binary files PW/src/compute_qdipol_so.o and PW_DFT-CES2/src/compute_qdipol_so.o differ
+Binary files PW/src/compute_rho.o and PW_DFT-CES2/src/compute_rho.o differ
+Binary files PW/src/compute_ux.o and PW_DFT-CES2/src/compute_ux.o differ
+Binary files PW/src/coset.o and PW_DFT-CES2/src/coset.o differ
+Binary files PW/src/coul_cut_2d.mod and PW_DFT-CES2/src/coul_cut_2d.mod differ
+Binary files PW/src/Coul_cut_2D.o and PW_DFT-CES2/src/Coul_cut_2D.o differ
+Binary files PW/src/c_phase_field.o and PW_DFT-CES2/src/c_phase_field.o differ
+Binary files PW/src/data_structure.o and PW_DFT-CES2/src/data_structure.o differ
+Binary files PW/src/deriv_drhoc.o and PW_DFT-CES2/src/deriv_drhoc.o differ
+diff -urN PW/src/dft_ces.f90 PW_DFT-CES2/src/dft_ces.f90
+--- PW/src/dft_ces.f90	1970-01-01 09:00:00.000000000 +0900
++++ PW_DFT-CES2/src/dft_ces.f90	2025-07-30 04:51:44.587373745 +0900
+@@ -0,0 +1,527 @@
++! DFT-CES core subroutines. Written by H.-K. Lim & H. Kim
++! Copyright (C) 2016 M-design group @ KAIST
++! This file is distributed under the terms of the
++! GNU General Public License. See the file `License'
++! in the root directory of the present distribution,
++! or http://www.gnu.org/copyleft/gpl.txt .
++!
++!----------------------------------------------------------------------------
++SUBROUTINE init_ces
++  !----------------------------------------------------------------------------
++  !
++  ! ... This routine reads and computes the MD rho and MD pot
++  !
++  USE scf,                  ONLY : ext, ext_rep
++  USE kinds,                ONLY : DP
++  USE fft_base,             ONLY : dfftp
++  USE input_parameters,     ONLY : rho_ces, pauli_rep_ces
++  USE wavefunctions_module, ONLY : psic
++  USE lsda_mod,             ONLY : nspin
++  USE fft_interfaces,       ONLY : fwfft
++  USE scatter_mod,          ONLY : scatter_grid, gather_grid
++  USE io_global,            ONLY : ionode, stdout
++  USE io_files,             ONLY : prefix, tmp_dir, seqopn 
++  USE ions_base,            ONLY : nat, tau
++  !
++  IMPLICIT NONE
++  !
++  REAL(DP), ALLOCATABLE :: rho_ext_read(:,:), rho_xyz(:,:,:)
++  REAL(DP), ALLOCATABLE :: ext_write_r(:), v_xyz(:,:,:)
++  LOGICAL :: file_exst
++  REAL(DP) :: real_temp(3), glen(3), ehart_ext, charge_ext
++  !
++  INTEGER :: iunextpot, nat_ext, nr1_ext, nr2_ext, nr3_ext, i, j, i1, i2, i3, ounit, forc_unit
++  INTEGER :: multiplier
++  LOGICAL :: exst
++  CHARACTER(len=80) :: readfile
++  !
++  INTEGER, EXTERNAL :: find_free_unit
++  !
++  allocate(rho_ext_read(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, 3))
++  !
++  if (ionode) then
++    do j=1, 2
++    !
++    multiplier = -1
++    if(j==1) readfile = rho_ces
++    if(j==2) readfile = pauli_rep_ces
++    if(j==2) multiplier = 1
++    !
++    allocate(rho_xyz(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x))
++    !
++    inquire(file= "./" // trim(readfile), exist=exst)
++    if(.not.exst) call errore ('init_ces', 'rho_ces does not exist', 1)
++    !
++    iunextpot = find_free_unit()
++    open(unit=iunextpot, file="./"//trim(readfile), status='old')
++    !
++    read(iunextpot,*)
++    read(iunextpot,*)
++    ! Skipping header in rho_ces
++    read(iunextpot,'(I5,3F12.6)') nat_ext, real_temp(3)
++    read(iunextpot,'(I5,3F12.6)') nr1_ext, real_temp(3)
++    if(nr1_ext.ne.dfftp%nr1x) call errore('init_ces','Mismatched nr1',1)
++    read(iunextpot,'(I5,3F12.6)') nr2_ext, real_temp(3)
++    if(nr2_ext.ne.dfftp%nr2x) call errore('init_ces','Mismatched nr2',1)
++    read(iunextpot,'(I5,3F12.6)') nr3_ext, real_temp(3)
++    if(nr3_ext.ne.dfftp%nr3x) call errore('init_ces','Mismatched nr3',1)
++    ! Checking number of grid points in each direction
++    do i=1,nat_ext
++      read(iunextpot,*)
++    enddo
++    ! Passing atoms section
++    read(iunextpot,*)(((rho_xyz(i1,i2,i3),i3=1,nr3_ext),i2=1,nr2_ext),i1=1,nr1_ext)
++    ! Parsing MD rho
++    i=0
++    do i3=1,nr3_ext
++      do i2=1,nr2_ext
++        do i1=1,nr1_ext
++          i=i+1
++          rho_ext_read(i,j) = multiplier*rho_xyz(i1,i2,i3) 
++          ! due to MDrho.cube has opposite sign of charge
++        enddo
++      enddo
++    enddo
++    ! transforming row-major to column-major order
++    close(iunextpot)
++    deallocate(rho_xyz)
++    !
++    enddo
++  endif
++  ! ionode end
++#if defined (__MPI)
++  call scatter_grid(dfftp, rho_ext_read(:,1), ext%of_r(:,1))   ! MD charge density
++  call scatter_grid(dfftp, rho_ext_read(:,2), ext_rep%of_r(:,1)) ! rep potential
++#else
++  ext%of_r(:,1) = rho_ext_read(:,1)
++  ext_rep%of_r(:,1) = rho_ext_read(:,2)
++#endif
++  !
++  psic(:)=ext%of_r(:,1)
++  !
++  call fwfft('Rho', psic, dfftp)
++  !
++  ext%of_g(:,1)=psic(dfftp%nl(:))
++  !
++  if(nspin==2) then
++    ext%of_g(:,1)=ext%of_g(:,1)/2.d0
++    ext%of_g(:,2)=ext%of_g(:,1)
++  endif
++  !
++  ! MD rho r-space to g-space
++  !
++  ext%kin_r(:,:)=0.d0
++  call v_h(ext%of_g, ehart_ext, charge_ext, ext%kin_r)
++  !
++  ALLOCATE( ext_write_r(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
++  ALLOCATE( v_xyz(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x) )
++  !
++  do j=1,2
++  !
++  if(j==1) readfile = 'v_md.cube'
++  !
++#ifdef __MPI
++  if(j==1)  CALL gather_grid(dfftp, ext%kin_r(:,1), ext_write_r)
++#else
++  if(j==1) ext_write_r = ext%kin_r(:,1)
++#endif
++  !
++  if (ionode) then
++     ounit = find_free_unit()
++     OPEN (unit = ounit, file = readfile, form = 'formatted', status = 'unknown')
++     !
++     i=0
++     do i3=1,dfftp%nr3x
++        do i2=1,dfftp%nr2x
++           do i1=1,dfftp%nr1x
++              i=i+1
++              v_xyz(i1,i2,i3) = ext_write_r(i)
++           end do
++        end do
++     end do
++!     CALL write_cubefile_diag (v_xyz, ounit)
++     close(ounit)
++!     write( stdout,*) "                                  "
++!     WRITE( stdout, '(a,1x,a)') '  ## MD potential file has been written:', readfile
++  end if
++  !
++  enddo
++  !
++  DEALLOCATE(ext_write_r)
++  DEALLOCATE(v_xyz)
++  !
++  write(stdout,*) "                                  "
++  write(stdout,*) "    DFT-CES: Initiation completed."
++  !
++  deallocate(rho_ext_read)
++  !
++  RETURN
++  !
++END SUBROUTINE init_ces
++
++!----------------------------------------------------------------------------
++SUBROUTINE v_ces( v )
++  !----------------------------------------------------------------------------
++  !
++  ! ... This routine adds MD potential to Hatree potential
++  !
++  USE scf,                  ONLY : rho, ext, ext_rep, scf_type, vltot
++  USE kinds,                ONLY : DP
++  USE fft_base,             ONLY : dfftp
++  USE gvect,                ONLY : ngm
++  USE ions_base,            ONLY : nat, tau, extfor, ityp, extfor, atm
++  USE cell_base,            ONLY : alat, at, bg
++  USE input_parameters,     ONLY : dft_ces
++  USE lsda_mod,             ONLY : nspin
++  USE io_global,            ONLY : ionode, stdout
++  USE io_files,             ONLY : prefix, tmp_dir
++  USE cell_base,            ONLY : at
++  USE mp,                   ONLY : mp_sum
++  USE mp_bands,             ONLY : intra_bgrp_comm
++  USE ener,                 ONLY : E_ces
++  !
++  IMPLICIT NONE
++  !
++  REAL(DP), INTENT(INOUT) :: v(dfftp%nnr,nspin)
++  !
++  LOGICAL :: exst
++  REAL(DP) :: glen(3), ehart_ext, charge_ext, e_ext_ion, e_ext_disp, ne_ext_disp 
++  REAL(DP) :: e_ext_el, e_ext_rep_el
++  REAL(DP) :: tpos(3), inpos(3), saveinpos(3,nat)
++  INTEGER :: is, i, nt, at_num, forc_unit
++  INTEGER, EXTERNAL :: atomic_number
++  !
++  do is=1, nspin
++    v(:,is) = v(:,is) + ext%kin_r(:,is)+ext_rep%of_r(:,1)
++  enddo
++  ! Adding MD pot to Hartree pot
++!  DO i = 1,nat
++!    write(stdout,'("Hi check ",5F12.6," ")') tau(:,i)
++!    WRITE (unit = forc_unit, FMT = *) tau(1,i)
++!  ENDDO
++
++  !
++  E_ces=0.d0
++  glen(1)=alat*at(1,1)/dble(dfftp%nr1x)
++  glen(2)=alat*at(2,2)/dble(dfftp%nr2x)
++  glen(3)=alat*at(3,3)/dble(dfftp%nr3x)
++  !
++  e_ext_ion=0.d0
++  e_ext_ion=sum(ext%of_r(:,1)*vltot)*glen(1)*glen(2)*glen(3)
++  e_ext_disp=0.d0
++  ne_ext_disp=0.d0
++#ifdef __MPI
++  call mp_sum(e_ext_ion, intra_bgrp_comm)
++#endif
++  ! MD rho * ion pot energy calculation
++  !
++  e_ext_el=0.d0
++  e_ext_rep_el=0.d0
++  do is=1, nspin
++    e_ext_el = e_ext_el + sum(rho%of_r(:,is)*ext%kin_r(:,is)) &
++               *glen(1)*glen(2)*glen(3)
++    e_ext_rep_el = e_ext_rep_el + sum(rho%of_r(:,is)*ext_rep%of_r(:,is), MASK=rho%of_r(:,is) .GT. 0.0000001) &
++               *glen(1)*glen(2)*glen(3)
++
++  enddo
++#ifdef __MPI
++  call mp_sum(e_ext_el, intra_bgrp_comm)
++  call mp_sum(e_ext_rep_el, intra_bgrp_comm)
++#endif
++  ! QE rho * MD pot energy calculation
++  !
++  if (ionode) then
++    !      
++    inquire(file = 'meanforce', exist=exst)
++    if(.not.exst) THEN
++      !      
++      OPEN (unit = forc_unit, file = 'meanforce', status = 'unknown')
++      !OPEN (unit = forc_unit, file = trim(prefix)//trim( prefix )// '.init', status = 'unknown')
++      !      
++      DO i=1,nat
++        nt = ityp(i)
++        at_num = atomic_number(trim(atm(nt)))
++        tpos = matmul( transpose(bg), tau(:,i) )
++        tpos = tpos - nint(tpos - 0.5d0)
++        inpos = alat * matmul( at, tpos )
++        saveinpos(1,i)=inpos(1)
++        saveinpos(2,i)=inpos(2)
++        saveinpos(3,i)=inpos(3)
++        WRITE (unit = forc_unit, FMT = *) saveinpos(:,i)
++!     WRITE(ounit,'(I5,5F12.6)') at_num, inpos
++!        write(stdout,'(" DFT-CES: CHECK ",I5," ",5F12.6," ",F15.6," ",F15.6," ",F15.6,"")') at_num, inpos, extfor(1,i), &
++!        extfor(2,i), extfor(3,i)
++      ENDDO
++      !
++    else
++      OPEN (unit = forc_unit, file = 'meanforce', status = 'OLD',action='READ')
++      !      
++      do i=1,nat
++        !
++        READ ( unit = forc_unit, FMT = *) saveinpos(:,i)
++!        write(stdout,'(" DFT-CES: CHECK ",I5," ",F15.6," ",F15.6," ",F15.6,"")') at_num, saveinpos(1,i), saveinpos(2,i), &
++!        saveinpos(3,i)
++        !
++      enddo
++      !
++    endif
++    CLOSE (unit = forc_unit)
++    !
++  endif
++
++!  write(stdout, '("before the show")')
++
++
++  DO i=1,nat
++     nt = ityp(i)
++     at_num = atomic_number(trim(atm(nt)))
++     tpos = matmul( transpose(bg), tau(:,i) )
++     tpos = tpos - nint(tpos - 0.5d0)
++     inpos = alat * matmul( at, tpos ) 
++     ne_ext_disp = ne_ext_disp + (inpos(1) - saveinpos(1,i)) * extfor(1,i) + (inpos(2) - saveinpos(2,i)) * extfor(2,i) + &
++                  (inpos(3) - saveinpos(3,i)) * extfor(3,i)  
++!...extfor in Ry/bohr 
++!...inpos in bohr
++!...summation of projection onto the vector of forces of displacement vector.
++!     write(stdout,'(" DFT-CES: CHECK_ini ",I5," ",5F12.6," ",F15.6," ",F15.6," ",F15.6,"")') at_num, inpos, extfor(1,i), &
++!     extfor(2,i), extfor(3,i)
++!     write(stdout,'(" DFT-CES: check aft ",F15.6," ")') saveinpos(1,i)
++!     write(stdout,'(" DFT-CES: e_ext_disp ",F15.6," ")') e_ext_disp 
++  ENDDO
++  e_ext_disp = - ne_ext_disp
++!  write(stdout,'(" DFT-CES: final e_ext_disp ",F15.6," ")') e_ext_disp
++  !
++  E_ces = e_ext_ion + e_ext_el + e_ext_rep_el + e_ext_disp
++  ! Total external interaction energy
++  write(stdout,*) "        "
++  write(stdout,'("  DFT-CES: QM_ion*rho_ces = ",F17.8," Ry")') e_ext_ion
++  write(stdout,'("  DFT-CES: QM_rho*rho_ces = ",F17.8," Ry")') e_ext_el
++  write(stdout,'("  DFT-CES: QM_rho*pauli_rep_ces = ",F17.8," Ry")') e_ext_rep_el
++  write(stdout,'("  DFT-CES: Displace*meanforce = ",F17.8," Ry")') e_ext_disp
++  write(stdout,'("  DFT-CES: MD pot added. E_ces= ",F17.8," Ry")') E_ces
++  !
++  RETURN
++  !
++END SUBROUTINE v_ces
++
++!----------------------------------------------------------------------------
++SUBROUTINE ces_force( force_ces )
++  !----------------------------------------------------------------------------
++  !
++  ! ... This routine calculate external forces on ions
++  !
++  USE scf,                  ONLY : ext
++  USE kinds,                ONLY : DP
++  USE fft_base,             ONLY : dfftp
++  USE scatter_mod,          ONLY : gather_grid
++  USE io_global,            ONLY : ionode, stdout
++  USE cell_base,            ONLY : at, bg, alat
++  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, zv, tau
++  !
++  IMPLICIT NONE
++  !
++  REAL(DP), INTENT(OUT) :: force_ces(3,nat)
++  REAL(DP), ALLOCATABLE :: v_ext_r(:), v_grad_r(:,:), v_ext_tot(:)
++  REAL(DP) :: tpos(3), inpos(3), gridValue, triInter
++  INTEGER :: ipol, na
++  !
++  ALLOCATE( v_ext_r(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
++  ALLOCATE( v_ext_tot(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
++  ALLOCATE( v_grad_r(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x,3) )
++  !
++#ifdef __MPI
++  call gather_grid(dfftp, ext%kin_r(:,1), v_ext_r(:))
++#else
++  v_ext_r(:) = ext%kin_r(:,1)
++#endif
++  ! 
++  v_ext_tot = v_ext_r 
++  !
++  if (ionode) then
++    call potgrad(v_ext_tot, v_grad_r)
++    !
++    do na=1, nat
++      tpos = matmul( transpose(bg), tau(:,na) )
++      tpos = tpos - nint(tpos - 0.5d0)
++      inpos = alat * matmul( at, tpos )
++      do ipol=1, 3
++        force_ces(ipol, na) = -1 * zv(ityp(na)) &
++                  * triInter(v_grad_r(:,ipol),inpos(1),inpos(2),inpos(3))
++      enddo
++      !
++      write(stdout,'(''### Nuclear force on ion ''I4'' by external field''3F12.6)') na, force_ces(:,na)
++      write(stdout,'(''### ZV on ion ''I4'' by external field''3F12.6)') na, zv(ityp(na))
++      !
++    enddo
++    !
++  endif
++  !
++  DEALLOCATE( v_ext_r )
++  DEALLOCATE( v_ext_tot )
++  DEALLOCATE( v_grad_r )
++  !
++  RETURN
++  !
++END SUBROUTINE ces_force
++
++!----------------------------------------------------------------------------
++SUBROUTINE potgrad( vin, vout)
++  !----------------------------------------------------------------------------
++  !
++  ! ... This routine calculate gradients of MD potential
++  !
++  USE io_global,     ONLY : stdout
++  USE kinds,         ONLY : DP
++  USE fft_base,      ONLY : dfftp
++  USE cell_base,     ONLY : celldm, at, alat
++  !
++  IMPLICIT NONE
++  !
++  REAL(DP)       :: vin(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x)
++  REAL(DP)       :: vout(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x,3)
++  INTEGER :: i, j, k, im, jm, km
++  REAL(DP) :: glen(3)
++  !
++  glen(1) = alat*at(1,1)/dble(dfftp%nr1x)
++  glen(2) = alat*at(2,2)/dble(dfftp%nr2x)
++  glen(3) = alat*at(3,3)/dble(dfftp%nr3x)
++  !
++  do k=0, dfftp%nr3x - 1
++    do j=0, dfftp%nr2x - 1
++      do i=0, dfftp%nr1x - 1
++        !
++        if (i==0) then
++          im = dfftp%nr1x - 1
++        else
++          im = i - 1
++        end if
++        if (j==0) then
++          jm = dfftp%nr2x - 1
++        else
++          jm = j - 1
++        end if
++        if (k==0) then
++          km = dfftp%nr3x - 1
++        else
++          km = k - 1
++        end if
++        ! x-dir potential gradient
++        vout((i+j*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1,1) =                   &
++        -1*(vin((MOD((i+1),dfftp%nr1x)+j*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1)&
++        - vin((im+j*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1))/(2*glen(1))
++        ! y-dir potential gradient
++        vout((i+j*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1,2) =                   &
++        -1*(vin((i+MOD((j+1),dfftp%nr2x)*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1)&
++        - vin((i+jm*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1))/(2*glen(2))
++        ! z-dir potential gradient
++        vout((i+j*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1,3) =                   &
++        -1*(vin((i+j*dfftp%nr1x+MOD((k+1),dfftp%nr3x)*dfftp%nr1x*dfftp%nr2x)+1)&
++        - vin((i+j*dfftp%nr1x+km*dfftp%nr1x*dfftp%nr2x)+1))/(2*glen(3))
++        !
++        end do
++    end do
++  end do
++  !
++  return
++  !
++END SUBROUTINE potgrad
++
++SUBROUTINE write_cubefile_diag(grid_data, ounit)
++
++  USE cell_base,     ONLY : alat, at, bg
++  USE ions_base,     ONLY : nat, ityp, tau, atm
++  USE fft_base,      ONLY : dfftp
++  USE kinds,         ONLY : DP
++
++  IMPLICIT NONE
++  INTEGER, INTENT(IN):: ounit
++  REAL(DP), INTENT(IN) :: grid_data(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
++  INTEGER          :: i, nt, i1, i2, i3, at_num
++  INTEGER, EXTERNAL:: atomic_number
++  real(DP)    :: at_chrg, tpos(3), inpos(3)
++
++  WRITE(ounit,*) 'Cubfile created from PWScf calculation'
++  WRITE(ounit,*) 'Total SCF Density'
++  WRITE(ounit,'(I5,3F12.6)') nat, 0.0d0, 0.0d0, 0.0d0
++  WRITE(ounit,'(I5,3F12.6)') dfftp%nr1, (alat*at(i,1)/dble(dfftp%nr1),i=1,3)
++  WRITE(ounit,'(I5,3F12.6)') dfftp%nr2, (alat*at(i,2)/dble(dfftp%nr2),i=1,3)
++  WRITE(ounit,'(I5,3F12.6)') dfftp%nr3, (alat*at(i,3)/dble(dfftp%nr3),i=1,3)
++
++  DO i=1,nat
++     nt = ityp(i)
++     at_num = atomic_number(trim(atm(nt)))
++     at_chrg= dble(at_num)
++     tpos = matmul( transpose(bg), tau(:,i) )
++     tpos = tpos - nint(tpos - 0.5d0)
++     inpos = alat * matmul( at, tpos )
++     WRITE(ounit,'(I5,5F12.6)') at_num, at_chrg, inpos
++  ENDDO
++
++  DO i1=1,dfftp%nr1
++     DO i2=1,dfftp%nr2
++        WRITE(ounit,'(6E13.5)') (grid_data(i1,i2,i3),i3=1,dfftp%nr3)
++     ENDDO
++  ENDDO
++
++  RETURN
++END SUBROUTINE write_cubefile_diag
++
++!----------------------------------------------------------------------------
++FUNCTION triInter( vin, x, y, z)
++  !----------------------------------------------------------------------------
++  !
++  ! ... This function returns interpolated grid value for arbitrary position
++  !
++  USE kinds,         ONLY : DP
++  USE fft_base,      ONLY : dfftp
++  USE cell_base,     ONLY : celldm, at, alat
++  USE io_global,     ONLY : stdout
++  !
++  IMPLICIT NONE
++  !
++  REAL(DP) :: vin(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x), triInter, gridValue
++  REAL(DP) :: x, y, z, px, py, pz, xd, yd, zd, c00, c10, c01, c11, c0, c1
++  INTEGER  :: i, j, k
++  REAL(DP) :: glen(3)
++  !
++  glen(1) = alat*at(1,1)/dble(dfftp%nr1x)
++  glen(2) = alat*at(2,2)/dble(dfftp%nr2x)
++  glen(3) = alat*at(3,3)/dble(dfftp%nr3x)
++  !
++  px = DMOD(x,alat*at(1,1))/glen(1)
++  py = DMOD(y,alat*at(2,2))/glen(2)
++  pz = DMOD(z,alat*at(3,3))/glen(3)
++  !
++  xd = px - INT(px)
++  yd = py - INT(py)
++  zd = pz - INT(pz)
++  !
++  c00 = gridValue(vin,INT(px),INT(py),INT(pz))*(1-xd)     &
++       +gridValue(vin,1+INT(px),INT(py),INT(pz))*xd
++  c10 = gridValue(vin,INT(px),1+INT(py),INT(pz))*(1-xd)   &
++       +gridValue(vin,1+INT(px),1+INT(py),INT(pz))*xd
++  c01 = gridValue(vin,INT(px),INT(py),1+INT(pz))*(1-xd)   &
++       +gridValue(vin,1+INT(px),INT(py),1+INT(pz))*xd
++  c11 = gridValue(vin,INT(px),1+INT(py),1+INT(pz))*(1-xd) &
++       +gridValue(vin,1+INT(px),1+INT(py),1+INT(pz))*xd
++  !
++  c0 = c00*(1-yd) + c10*yd
++  c1 = c01*(1-yd) + c11*yd
++  !
++  triInter = c0*(1-zd) + c1*zd
++  !
++END FUNCTION
++
++FUNCTION gridValue (vin, i, j, k)
++  !
++  USE kinds,         ONLY : DP
++  USE fft_base,      ONLY : dfftp
++  ! 
++  IMPLICIT NONE
++  !
++  REAL(DP) :: vin(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x), gridValue
++  INTEGER  :: i, j, k
++  !
++  gridValue = vin((i+j*dfftp%nr1x+k*dfftp%nr1x*dfftp%nr2x)+1)
++  !
++END FUNCTION
+Binary files PW/src/dft_ces.o and PW_DFT-CES2/src/dft_ces.o differ
+Binary files PW/src/dfunct.mod and PW_DFT-CES2/src/dfunct.mod differ
+Binary files PW/src/divide_class.o and PW_DFT-CES2/src/divide_class.o differ
+Binary files PW/src/divide_class_so.o and PW_DFT-CES2/src/divide_class_so.o differ
+Binary files PW/src/divide_et_impera.o and PW_DFT-CES2/src/divide_et_impera.o differ
+Binary files PW/src/d_matrix.o and PW_DFT-CES2/src/d_matrix.o differ
+Binary files PW/src/dqvan2.o and PW_DFT-CES2/src/dqvan2.o differ
+Binary files PW/src/drhoc.o and PW_DFT-CES2/src/drhoc.o differ
+Binary files PW/src/dvloc_of_g.o and PW_DFT-CES2/src/dvloc_of_g.o differ
+Binary files PW/src/dynamics_module.mod and PW_DFT-CES2/src/dynamics_module.mod differ
+Binary files PW/src/dynamics_module.o and PW_DFT-CES2/src/dynamics_module.o differ
+Binary files PW/src/efermig.o and PW_DFT-CES2/src/efermig.o differ
+Binary files PW/src/efermit.o and PW_DFT-CES2/src/efermit.o differ
+diff -urN PW/src/electrons.f90 PW_DFT-CES2/src/electrons.f90
+--- PW/src/electrons.f90	2024-04-23 22:30:34.171374897 +0900
++++ PW_DFT-CES2/src/electrons.f90	2025-07-30 04:51:44.294372500 +0900
+@@ -401,6 +401,10 @@
+   USE wrappers,             ONLY : memstat
+   !
+   USE plugin_variables,     ONLY : plugin_etot
++! DFT-CES start
++  USE input_parameters,     ONLY : dft_ces
++  USE ener,                 ONLY : E_ces
++! DFT-CES end
+   !
+   IMPLICIT NONE
+   !
+@@ -793,11 +797,11 @@
+      !
+      IF ( lelfield ) etot = etot + en_el
+      ! not sure about the HWF functional in the above case
+-     IF( textfor ) THEN
+-        eext = alat*compute_eextfor()
+-        etot = etot + eext
+-        hwf_energy = hwf_energy + eext
+-     END IF
++!     IF( textfor ) THEN
++!        eext = alat*compute_eextfor()
++!        etot = etot + eext
++!        hwf_energy = hwf_energy + eext
++!     END IF
+      IF (llondon) THEN
+         etot = etot + elondon
+         hwf_energy = hwf_energy + elondon
+@@ -837,6 +841,12 @@
+      ENDIF
+      !
+      ! ... adds possible external contribution from plugins to the energy
++! DFT-CES start
++     if ( dft_ces ) then
++       etot = etot + E_ces
++       hwf_energy = hwf_energy + E_ces
++     endif
++! DFT-CES end
+      !
+      etot = etot + plugin_etot 
+      !
+@@ -1174,7 +1184,7 @@
+           IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
+           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
+           IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
+-          IF ( textfor)  WRITE ( stdout , 9077 ) eext
++!          IF ( textfor)  WRITE ( stdout , 9077 ) eext
+           IF ( tefield )            WRITE( stdout, 9061 ) etotefield
+           IF ( gate )               WRITE( stdout, 9062 ) etotgatefield ! TB
+           IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
+@@ -1202,6 +1212,9 @@
+           ! ... contribution.
+           !
+           IF ( lfcpopt .or. lfcpdyn ) WRITE( stdout, 9072 ) ef*tot_charge
++! DFT-CES start
++          if ( dft_ces ) write(stdout, 9086) E_ces
++! DFT-CES end
+           !
+        ELSE IF ( conv_elec ) THEN
+           !
+@@ -1278,6 +1291,9 @@
+             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+             /'     estimated scf accuracy    <',1PE17.1,' Ry' )
+ 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
++! DFT-CES start
++9086 FORMAT(/'     DFT-CES energy            =',F17.8,' Ry' )
++! DFT-CES end
+ 
+   END SUBROUTINE print_energies
+   !
+Binary files PW/src/electrons.o and PW_DFT-CES2/src/electrons.o differ
+Binary files PW/src/ener.mod and PW_DFT-CES2/src/ener.mod differ
+Binary files PW/src/eqvect.o and PW_DFT-CES2/src/eqvect.o differ
+Binary files PW/src/esm.mod and PW_DFT-CES2/src/esm.mod differ
+Binary files PW/src/esm.o and PW_DFT-CES2/src/esm.o differ
+Binary files PW/src/ewald_dipole.o and PW_DFT-CES2/src/ewald_dipole.o differ
+Binary files PW/src/ewald.o and PW_DFT-CES2/src/ewald.o differ
+Binary files PW/src/extfield.mod and PW_DFT-CES2/src/extfield.mod differ
+Binary files PW/src/extfield.o and PW_DFT-CES2/src/extfield.o differ
+Binary files PW/src/extrapolation.mod and PW_DFT-CES2/src/extrapolation.mod differ
+Binary files PW/src/exx_band.mod and PW_DFT-CES2/src/exx_band.mod differ
+Binary files PW/src/exx_band.o and PW_DFT-CES2/src/exx_band.o differ
+Binary files PW/src/exx_base.mod and PW_DFT-CES2/src/exx_base.mod differ
+Binary files PW/src/exx_base.o and PW_DFT-CES2/src/exx_base.o differ
+Binary files PW/src/exx.mod and PW_DFT-CES2/src/exx.mod differ
+Binary files PW/src/exx.o and PW_DFT-CES2/src/exx.o differ
+Binary files PW/src/fcp.mod and PW_DFT-CES2/src/fcp.mod differ
+Binary files PW/src/fcp.o and PW_DFT-CES2/src/fcp.o differ
+Binary files PW/src/find_group.o and PW_DFT-CES2/src/find_group.o differ
+Binary files PW/src/fixed_occ.mod and PW_DFT-CES2/src/fixed_occ.mod differ
+Binary files PW/src/force_cc.o and PW_DFT-CES2/src/force_cc.o differ
+Binary files PW/src/force_corr.o and PW_DFT-CES2/src/force_corr.o differ
+Binary files PW/src/force_ew.o and PW_DFT-CES2/src/force_ew.o differ
+Binary files PW/src/force_hub.o and PW_DFT-CES2/src/force_hub.o differ
+Binary files PW/src/force_lc.o and PW_DFT-CES2/src/force_lc.o differ
+Binary files PW/src/force_mod.mod and PW_DFT-CES2/src/force_mod.mod differ
+Binary files PW/src/forces_bp_efield.o and PW_DFT-CES2/src/forces_bp_efield.o differ
+diff -urN PW/src/forces.f90 PW_DFT-CES2/src/forces.f90
+--- PW/src/forces.f90	2024-04-23 22:30:34.242375508 +0900
++++ PW_DFT-CES2/src/forces.f90	2025-07-30 04:51:43.574369440 +0900
+@@ -57,6 +57,9 @@
+   USE tsvdw_module,  ONLY : FtsvdW
+   USE esm,           ONLY : do_comp_esm, esm_bc, esm_force_ew
+   USE qmmm,          ONLY : qmmm_mode
++! DFT-CES start
++  USE input_parameters, ONLY : dft_ces
++! DFT-CES end
+   !
+   IMPLICIT NONE
+   !
+@@ -70,6 +73,9 @@
+                            force_mt(:,:), &
+                            forcescc(:,:), &
+                            forces_bp_efield(:,:), &
++! DFT-CES start
++                           force_ces(:,:), &
++! DFT-CES end
+                            forceh(:,:)
+     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
+ !
+@@ -92,11 +98,17 @@
+   CALL start_clock( 'forces' )
+   !
+   ALLOCATE( forcenl( 3, nat ), forcelc( 3, nat ), forcecc( 3, nat ), &
++! DFT-CES start
++            force_ces( 3, nat), &
++! DFT-CES end
+             forceh( 3, nat ), forceion( 3, nat ), forcescc( 3, nat ) )
+   !    
+   forcescc(:,:) = 0.D0
+   forceh(:,:)   = 0.D0
+   force (:,:)   = 0.D0
++! DFT-CES start
++  force_ces(:,:) = 0.D0
++! DFT-CES end
+   !
+   ! ... The nonlocal contribution is computed here
+   !
+@@ -194,6 +206,11 @@
+      endif
+   endif
+   !
++! DFT-CES start
++  if ( dft_ces ) then
++     call ces_force( force_ces )
++  endif
++! DFT-CES end
+   ! ... here we sum all the contributions and compute the total force acting
+   ! ... on the crystal
+   !
+@@ -220,6 +237,9 @@
+         IF ( gate ) force(ipol,na) = force(ipol,na) + forcegate(ipol,na) ! TB
+         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
+         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
++! DFT-CES start
++        if ( dft_ces ) force(ipol,na) = force(ipol,na) + force_ces(ipol,na)
++! DFT-CES end
+ 
+         sumfor = sumfor + force(ipol,na)
+         !
+Binary files PW/src/.forces.f90.swp and PW_DFT-CES2/src/.forces.f90.swp differ
+Binary files PW/src/forces.o and PW_DFT-CES2/src/forces.o differ
+Binary files PW/src/force_us.o and PW_DFT-CES2/src/force_us.o differ
+Binary files PW/src/g2_kin.o and PW_DFT-CES2/src/g2_kin.o differ
+Binary files PW/src/gen_at_dj.o and PW_DFT-CES2/src/gen_at_dj.o differ
+Binary files PW/src/gen_at_dy.o and PW_DFT-CES2/src/gen_at_dy.o differ
+Binary files PW/src/generate_rVV10_kernel_table.o and PW_DFT-CES2/src/generate_rVV10_kernel_table.o differ
+Binary files PW/src/generate_rVV10_kernel_table.x and PW_DFT-CES2/src/generate_rVV10_kernel_table.x differ
+Binary files PW/src/generate_vdW_kernel_table.o and PW_DFT-CES2/src/generate_vdW_kernel_table.o differ
+Binary files PW/src/generate_vdW_kernel_table.x and PW_DFT-CES2/src/generate_vdW_kernel_table.x differ
+Binary files PW/src/gen_us_dj.o and PW_DFT-CES2/src/gen_us_dj.o differ
+Binary files PW/src/gen_us_dy.o and PW_DFT-CES2/src/gen_us_dy.o differ
+Binary files PW/src/get_locals.o and PW_DFT-CES2/src/get_locals.o differ
+Binary files PW/src/gk_sort.o and PW_DFT-CES2/src/gk_sort.o differ
+Binary files PW/src/g_psi_mod.mod and PW_DFT-CES2/src/g_psi_mod.mod differ
+Binary files PW/src/g_psi_mod.o and PW_DFT-CES2/src/g_psi_mod.o differ
+Binary files PW/src/g_psi.o and PW_DFT-CES2/src/g_psi.o differ
+Binary files PW/src/gradcorr.o and PW_DFT-CES2/src/gradcorr.o differ
+Binary files PW/src/gweights.o and PW_DFT-CES2/src/gweights.o differ
+Binary files PW/src/h_1psi.o and PW_DFT-CES2/src/h_1psi.o differ
+Binary files PW/src/h_epsi_her_apply.o and PW_DFT-CES2/src/h_epsi_her_apply.o differ
+Binary files PW/src/h_epsi_her_set.o and PW_DFT-CES2/src/h_epsi_her_set.o differ
+Binary files PW/src/hinit0.o and PW_DFT-CES2/src/hinit0.o differ
+Binary files PW/src/hinit1.o and PW_DFT-CES2/src/hinit1.o differ
+Binary files PW/src/h_psi_meta.o and PW_DFT-CES2/src/h_psi_meta.o differ
+Binary files PW/src/h_psi.o and PW_DFT-CES2/src/h_psi.o differ
+Binary files PW/src/init_at_1.o and PW_DFT-CES2/src/init_at_1.o differ
+Binary files PW/src/init_ns.o and PW_DFT-CES2/src/init_ns.o differ
+Binary files PW/src/init_q_aeps.o and PW_DFT-CES2/src/init_q_aeps.o differ
+Binary files PW/src/init_run.o and PW_DFT-CES2/src/init_run.o differ
+Binary files PW/src/init_us_0.o and PW_DFT-CES2/src/init_us_0.o differ
+Binary files PW/src/init_us_1.o and PW_DFT-CES2/src/init_us_1.o differ
+Binary files PW/src/init_us_2.o and PW_DFT-CES2/src/init_us_2.o differ
+Binary files PW/src/init_us_b0.o and PW_DFT-CES2/src/init_us_b0.o differ
+Binary files PW/src/init_vloc.o and PW_DFT-CES2/src/init_vloc.o differ
+diff -urN PW/src/input.f90 PW_DFT-CES2/src/input.f90
+--- PW/src/input.f90	2024-04-23 22:30:32.886363842 +0900
++++ PW_DFT-CES2/src/input.f90	2025-07-30 04:51:44.587373745 +0900
+@@ -220,6 +220,9 @@
+                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
+                                nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
+                                vdw_table_name, memory, max_seconds, tqmmm,     &
++! DFT-CES start
++                               dft_ces, rho_ces, pauli_rep_ces,                &
++! DFT-CES end
+                                efield_phase, gate
+ 
+   !
+Binary files PW/src/input.o and PW_DFT-CES2/src/input.o differ
+Binary files PW/src/io_rho_xml.mod and PW_DFT-CES2/src/io_rho_xml.mod differ
+Binary files PW/src/io_rho_xml.o and PW_DFT-CES2/src/io_rho_xml.o differ
+Binary files PW/src/irrek.o and PW_DFT-CES2/src/irrek.o differ
+Binary files PW/src/iweights.o and PW_DFT-CES2/src/iweights.o differ
+Binary files PW/src/klist.mod and PW_DFT-CES2/src/klist.mod differ
+Binary files PW/src/kpoint_grid.o and PW_DFT-CES2/src/kpoint_grid.o differ
+Binary files PW/src/ktetra.mod and PW_DFT-CES2/src/ktetra.mod differ
+Binary files PW/src/lchk_tauxk.o and PW_DFT-CES2/src/lchk_tauxk.o differ
+Binary files PW/src/ldau.mod and PW_DFT-CES2/src/ldau.mod differ
+Binary files PW/src/ldaU.o and PW_DFT-CES2/src/ldaU.o differ
+Binary files PW/src/libpw.a and PW_DFT-CES2/src/libpw.a differ
+Binary files PW/src/loc_scdm.mod and PW_DFT-CES2/src/loc_scdm.mod differ
+Binary files PW/src/loc_scdm.o and PW_DFT-CES2/src/loc_scdm.o differ
+Binary files PW/src/lsda_mod.mod and PW_DFT-CES2/src/lsda_mod.mod differ
+diff -urN PW/src/make.depend PW_DFT-CES2/src/make.depend
+--- PW/src/make.depend	2024-04-23 22:30:32.990364737 +0900
++++ PW_DFT-CES2/src/make.depend	2025-07-30 04:51:43.525369232 +0900
+@@ -37,6 +37,7 @@
+ add_efield.o : ../../UtilXlib/mp.o
+ add_efield.o : extfield.o
+ add_efield.o : pwcom.o
++add_efield.o : dft_ces.o
+ add_gatefield.o : ../../Modules/cell_base.o
+ add_gatefield.o : ../../Modules/constants.o
+ add_gatefield.o : ../../Modules/control_flags.o
+@@ -470,6 +471,16 @@
+ ewald_dipole.o : ../../UtilXlib/mp.o
+ ewald_dipole.o : pwcom.o
+ extfield.o : ../../Modules/kind.o
++dft_ces.o : scf_mod.o
++dft_ces.o : ../../Modules/kind.o
++dft_ces.o : ../../FFTXlib/scatter_mod.o
++dft_ces.o : ../../FFTXlib/fft_interfaces.o
++dft_ces.o : ../../Modules/input_parameters.o
++dft_ces.o : ../../Modules/wavefunctions.o
++dft_ces.o : ../../Modules/io_global.o
++dft_ces.o : ../../Modules/ions_base.o
++dft_ces.o : ../../Modules/cell_base.o
++dft_ces.o : ../../Modules/mp_bands.o
+ exx.o : ../../FFTXlib/fft_interfaces.o
+ exx.o : ../../FFTXlib/fft_types.o
+ exx.o : ../../FFTXlib/scatter_mod.o
+@@ -2208,6 +2219,7 @@
+ utils.o : ../../Modules/noncol.o
+ utils.o : pwcom.o
+ v_of_rho.o : ../../FFTXlib/fft_interfaces.o
++v_of_rho.o : ../../FFTXlib/scatter_mod.o
+ v_of_rho.o : ../../Modules/cell_base.o
+ v_of_rho.o : ../../Modules/constants.o
+ v_of_rho.o : ../../Modules/control_flags.o
+diff -urN PW/src/Makefile PW_DFT-CES2/src/Makefile
+--- PW/src/Makefile	2024-04-23 22:30:32.615361511 +0900
++++ PW_DFT-CES2/src/Makefile	2025-07-30 04:51:44.603373813 +0900
+@@ -74,6 +74,7 @@
+ extfield.o \
+ exx_base.o \
+ exx_band.o \
++dft_ces.o \
+ exx.o \
+ fcp.o \
+ find_group.o \
+Binary files PW/src/make_pointlists.o and PW_DFT-CES2/src/make_pointlists.o differ
+Binary files PW/src/makov_payne.o and PW_DFT-CES2/src/makov_payne.o differ
+Binary files PW/src/manypw.o and PW_DFT-CES2/src/manypw.o differ
+Binary files PW/src/martyna_tuckerman.mod and PW_DFT-CES2/src/martyna_tuckerman.mod differ
+Binary files PW/src/martyna_tuckerman.o and PW_DFT-CES2/src/martyna_tuckerman.o differ
+Binary files PW/src/memory_report.o and PW_DFT-CES2/src/memory_report.o differ
+Binary files PW/src/mix_rho.o and PW_DFT-CES2/src/mix_rho.o differ
+Binary files PW/src/move_ions.o and PW_DFT-CES2/src/move_ions.o differ
+Binary files PW/src/multable.o and PW_DFT-CES2/src/multable.o differ
+Binary files PW/src/newd.o and PW_DFT-CES2/src/newd.o differ
+Binary files PW/src/new_ns.o and PW_DFT-CES2/src/new_ns.o differ
+Binary files PW/src/new_occ.o and PW_DFT-CES2/src/new_occ.o differ
+Binary files PW/src/non_scf.o and PW_DFT-CES2/src/non_scf.o differ
+Binary files PW/src/n_plane_waves.o and PW_DFT-CES2/src/n_plane_waves.o differ
+Binary files PW/src/ns_adj.o and PW_DFT-CES2/src/ns_adj.o differ
+Binary files PW/src/offset_atom_wfc.o and PW_DFT-CES2/src/offset_atom_wfc.o differ
+Binary files PW/src/openfil.o and PW_DFT-CES2/src/openfil.o differ
+Binary files PW/src/orbm_kubo.o and PW_DFT-CES2/src/orbm_kubo.o differ
+Binary files PW/src/orthoatwfc.o and PW_DFT-CES2/src/orthoatwfc.o differ
+Binary files PW/src/ortho_wfc.o and PW_DFT-CES2/src/ortho_wfc.o differ
+Binary files PW/src/output_tau.o and PW_DFT-CES2/src/output_tau.o differ
+Binary files PW/src/para.o and PW_DFT-CES2/src/para.o differ
+Binary files PW/src/paw_exx.mod and PW_DFT-CES2/src/paw_exx.mod differ
+Binary files PW/src/paw_exx.o and PW_DFT-CES2/src/paw_exx.o differ
+Binary files PW/src/paw_init.mod and PW_DFT-CES2/src/paw_init.mod differ
+Binary files PW/src/paw_init.o and PW_DFT-CES2/src/paw_init.o differ
+Binary files PW/src/paw_onecenter.mod and PW_DFT-CES2/src/paw_onecenter.mod differ
+Binary files PW/src/paw_onecenter.o and PW_DFT-CES2/src/paw_onecenter.o differ
+Binary files PW/src/paw_symmetry.mod and PW_DFT-CES2/src/paw_symmetry.mod differ
+Binary files PW/src/paw_symmetry.o and PW_DFT-CES2/src/paw_symmetry.o differ
+Binary files PW/src/plugin_check.o and PW_DFT-CES2/src/plugin_check.o differ
+Binary files PW/src/plugin_clean.o and PW_DFT-CES2/src/plugin_clean.o differ
+Binary files PW/src/plugin_clock.o and PW_DFT-CES2/src/plugin_clock.o differ
+Binary files PW/src/plugin_ext_forces.o and PW_DFT-CES2/src/plugin_ext_forces.o differ
+Binary files PW/src/plugin_initbase.o and PW_DFT-CES2/src/plugin_initbase.o differ
+Binary files PW/src/plugin_init_cell.o and PW_DFT-CES2/src/plugin_init_cell.o differ
+Binary files PW/src/plugin_initialization.o and PW_DFT-CES2/src/plugin_initialization.o differ
+Binary files PW/src/plugin_init_ions.o and PW_DFT-CES2/src/plugin_init_ions.o differ
+Binary files PW/src/plugin_init_potential.o and PW_DFT-CES2/src/plugin_init_potential.o differ
+Binary files PW/src/plugin_int_forces.o and PW_DFT-CES2/src/plugin_int_forces.o differ
+Binary files PW/src/plugin_print_energies.o and PW_DFT-CES2/src/plugin_print_energies.o differ
+Binary files PW/src/plugin_read_input.o and PW_DFT-CES2/src/plugin_read_input.o differ
+Binary files PW/src/plugin_scf_energy.o and PW_DFT-CES2/src/plugin_scf_energy.o differ
+Binary files PW/src/plugin_scf_potential.o and PW_DFT-CES2/src/plugin_scf_potential.o differ
+Binary files PW/src/plugin_summary.o and PW_DFT-CES2/src/plugin_summary.o differ
+Binary files PW/src/plus_u_full.o and PW_DFT-CES2/src/plus_u_full.o differ
+diff -urN PW/src/potinit.f90 PW_DFT-CES2/src/potinit.f90
+--- PW/src/potinit.f90	2024-04-23 22:30:33.197366518 +0900
++++ PW_DFT-CES2/src/potinit.f90	2025-07-30 04:51:43.784370333 +0900
+@@ -36,6 +36,9 @@
+   USE gvecs,                ONLY : doublegrid
+   USE control_flags,        ONLY : lscf, gamma_only
+   USE scf,                  ONLY : rho, rho_core, rhog_core, &
++! DFT-CES start
++                                   ext, &
++! DFT-CES end
+                                    vltot, v, vrs, kedtau
+   USE funct,                ONLY : dft_is_meta
+   USE wavefunctions_module, ONLY : psic
+@@ -60,6 +63,9 @@
+   USE paw_variables,        ONLY : okpaw, ddd_PAW
+   USE paw_init,             ONLY : PAW_atomic_becsum
+   USE paw_onecenter,        ONLY : PAW_potential
++! DFT-CES start
++  USE input_parameters,     ONLY : dft_ces
++! DFT-CES end
+   !
+   IMPLICIT NONE
+   !
+@@ -262,6 +268,11 @@
+      ENDIF
+      !
+   END IF
++! DFT-CES start
++  if ( dft_ces ) then
++     call init_ces()
++  endif
++! DFT-CES end
+   !
+   IF ( report /= 0 .AND. &
+        noncolin .AND. domag .AND. lscf ) CALL report_mag()
+Binary files PW/src/potinit.o and PW_DFT-CES2/src/potinit.o differ
+Binary files PW/src/print_clock_pw.o and PW_DFT-CES2/src/print_clock_pw.o differ
+Binary files PW/src/print_ks_energies.o and PW_DFT-CES2/src/print_ks_energies.o differ
+Binary files PW/src/punch.o and PW_DFT-CES2/src/punch.o differ
+Binary files PW/src/pw2blip.mod and PW_DFT-CES2/src/pw2blip.mod differ
+Binary files PW/src/pw2blip.o and PW_DFT-CES2/src/pw2blip.o differ
+Binary files PW/src/pw2casino.o and PW_DFT-CES2/src/pw2casino.o differ
+Binary files PW/src/pw2casino_write.o and PW_DFT-CES2/src/pw2casino_write.o differ
+diff -urN PW/src/pwcom.f90 PW_DFT-CES2/src/pwcom.f90
+--- PW/src/pwcom.f90	2024-04-23 22:30:33.317367550 +0900
++++ PW_DFT-CES2/src/pwcom.f90	2025-07-30 04:51:43.784370333 +0900
+@@ -242,6 +242,9 @@
+        exdm,           &! the XDM dispersion energy
+        demet,          &! variational correction ("-TS") for metals
+        epaw,           &! sum of one-center paw contributions
++! DFT-CES start
++       E_ces,          &! the DFT-CES electrostatic interaction energy
++! DFT-CES end
+        ef, ef_up, ef_dw ! the fermi energy (up and dw if two_fermi_energies=.T.)
+   !
+ END MODULE ener
+Binary files PW/src/pwcom.mod and PW_DFT-CES2/src/pwcom.mod differ
+Binary files PW/src/pwcom.o and PW_DFT-CES2/src/pwcom.o differ
+Binary files PW/src/pw_init_qexsd_input.o and PW_DFT-CES2/src/pw_init_qexsd_input.o differ
+Binary files PW/src/pw_restart.mod and PW_DFT-CES2/src/pw_restart.mod differ
+Binary files PW/src/pw_restart_new.mod and PW_DFT-CES2/src/pw_restart_new.mod differ
+Binary files PW/src/pw_restart_new.o and PW_DFT-CES2/src/pw_restart_new.o differ
+Binary files PW/src/pw_restart.o and PW_DFT-CES2/src/pw_restart.o differ
+Binary files PW/src/pwscf.o and PW_DFT-CES2/src/pwscf.o differ
+Binary files PW/src/pw.x and PW_DFT-CES2/src/pw.x differ
+Binary files PW/src/qvan2.o and PW_DFT-CES2/src/qvan2.o differ
+Binary files PW/src/rap_point_group_is.mod and PW_DFT-CES2/src/rap_point_group_is.mod differ
+Binary files PW/src/rap_point_group.mod and PW_DFT-CES2/src/rap_point_group.mod differ
+Binary files PW/src/rap_point_group_so.mod and PW_DFT-CES2/src/rap_point_group_so.mod differ
+Binary files PW/src/rdiagh.o and PW_DFT-CES2/src/rdiagh.o differ
+Binary files PW/src/read_conf_from_file.o and PW_DFT-CES2/src/read_conf_from_file.o differ
+Binary files PW/src/read_file_new.o and PW_DFT-CES2/src/read_file_new.o differ
+Binary files PW/src/read_file.o and PW_DFT-CES2/src/read_file.o differ
+Binary files PW/src/realus.mod and PW_DFT-CES2/src/realus.mod differ
+Binary files PW/src/realus.o and PW_DFT-CES2/src/realus.o differ
+Binary files PW/src/relax.mod and PW_DFT-CES2/src/relax.mod differ
+Binary files PW/src/remove_atomic_rho.o and PW_DFT-CES2/src/remove_atomic_rho.o differ
+Binary files PW/src/report_mag.o and PW_DFT-CES2/src/report_mag.o differ
+Binary files PW/src/restart_in_electrons.o and PW_DFT-CES2/src/restart_in_electrons.o differ
+Binary files PW/src/rho2zeta.o and PW_DFT-CES2/src/rho2zeta.o differ
+Binary files PW/src/rotate_wfc.o and PW_DFT-CES2/src/rotate_wfc.o differ
+Binary files PW/src/run_driver.o and PW_DFT-CES2/src/run_driver.o differ
+Binary files PW/src/run_pwscf.o and PW_DFT-CES2/src/run_pwscf.o differ
+Binary files PW/src/ruotaijk.o and PW_DFT-CES2/src/ruotaijk.o differ
+Binary files PW/src/s_1psi.o and PW_DFT-CES2/src/s_1psi.o differ
+Binary files PW/src/save_in_cbands.o and PW_DFT-CES2/src/save_in_cbands.o differ
+Binary files PW/src/save_in_electrons.o and PW_DFT-CES2/src/save_in_electrons.o differ
+Binary files PW/src/scale_h.o and PW_DFT-CES2/src/scale_h.o differ
+Binary files PW/src/scf.mod and PW_DFT-CES2/src/scf.mod differ
+diff -urN PW/src/scf_mod.f90 PW_DFT-CES2/src/scf_mod.f90
+--- PW/src/scf_mod.f90	2024-04-23 22:30:33.405368307 +0900
++++ PW_DFT-CES2/src/scf_mod.f90	2025-07-30 04:51:43.727370090 +0900
+@@ -29,6 +29,9 @@
+   USE uspp_param,   ONLY : nhm
+   USE extfield,     ONLY : dipfield, emaxpos, eopreg, edir
+   USE control_flags,ONLY : lxdm
++! DFT-CES start
++  USE input_parameters, ONLY : dft_ces
++! DFT-CES end
+   !
+   SAVE
+   !
+@@ -65,13 +68,20 @@
+   type (scf_type) :: rho  ! the charge density and its other components
+   type (scf_type) :: v    ! the scf potential
+   type (scf_type) :: vnew ! used to correct the forces
++! DFT-CES start
++  type (scf_type) :: ext  ! MD rho(of_r&of_g) and potential(kin_r)
++  type (scf_type) :: ext_ion ! MD rho(of_r&of_g) and potential(kin_r)
++  type (scf_type) :: ext_rep ! MD rho(of_r&of_g) and potential(kin_r)
++!  type (scf_type) :: ext_disp ! MD mean forces
++! DFT-CES end
+ 
+   REAL(DP) :: v_of_0    ! vltot(G=0)      
+   REAL(DP), ALLOCATABLE :: &
+        vltot(:),       &! the local potential in real space
+        vrs(:,:),       &! the total pot. in real space (smooth grid)
+        rho_core(:),    &! the core charge in real space
+-       kedtau(:,:)      ! position dependent kinetic energy enhancement factor
++       kedtau(:,:),    &! position dependent kinetic energy enhancement factor
++       tau_ini(:,:)
+   COMPLEX(DP), ALLOCATABLE :: &
+        rhog_core(:)     ! the core charge in reciprocal space
+ 
+@@ -92,7 +102,7 @@
+    LOGICAL                     :: allocate_becsum        ! PAW hack
+    allocate ( rho%of_r( dfftp%nnr, nspin) )
+    allocate ( rho%of_g( ngm, nspin ) )
+-   if (dft_is_meta() .or. lxdm) then
++   if (dft_is_meta() .or. lxdm .or. dft_ces) then
+       allocate ( rho%kin_r( dfftp%nnr, nspin) )
+       allocate ( rho%kin_g( ngm, nspin ) )
+    else
+Binary files PW/src/scf_mod.o and PW_DFT-CES2/src/scf_mod.o differ
+Binary files PW/src/set_kplusq.o and PW_DFT-CES2/src/set_kplusq.o differ
+Binary files PW/src/set_kup_and_kdw.o and PW_DFT-CES2/src/set_kup_and_kdw.o differ
+Binary files PW/src/setlocal.o and PW_DFT-CES2/src/setlocal.o differ
+Binary files PW/src/set_rhoc.o and PW_DFT-CES2/src/set_rhoc.o differ
+Binary files PW/src/setup.o and PW_DFT-CES2/src/setup.o differ
+Binary files PW/src/set_vrs.o and PW_DFT-CES2/src/set_vrs.o differ
+Binary files PW/src/sph_ind.o and PW_DFT-CES2/src/sph_ind.o differ
+Binary files PW/src/spin_orb.mod and PW_DFT-CES2/src/spin_orb.mod differ
+Binary files PW/src/spinor.o and PW_DFT-CES2/src/spinor.o differ
+Binary files PW/src/s_psi.o and PW_DFT-CES2/src/s_psi.o differ
+Binary files PW/src/start_k.mod and PW_DFT-CES2/src/start_k.mod differ
+Binary files PW/src/start_k.o and PW_DFT-CES2/src/start_k.o differ
+Binary files PW/src/stop_run.o and PW_DFT-CES2/src/stop_run.o differ
+Binary files PW/src/stres_cc.o and PW_DFT-CES2/src/stres_cc.o differ
+Binary files PW/src/stres_ewa.o and PW_DFT-CES2/src/stres_ewa.o differ
+Binary files PW/src/stres_gradcorr.o and PW_DFT-CES2/src/stres_gradcorr.o differ
+Binary files PW/src/stres_har.o and PW_DFT-CES2/src/stres_har.o differ
+Binary files PW/src/stres_hub.o and PW_DFT-CES2/src/stres_hub.o differ
+Binary files PW/src/stres_knl.o and PW_DFT-CES2/src/stres_knl.o differ
+Binary files PW/src/stres_loc.o and PW_DFT-CES2/src/stres_loc.o differ
+Binary files PW/src/stres_mgga.o and PW_DFT-CES2/src/stres_mgga.o differ
+Binary files PW/src/stres_nonloc_dft.o and PW_DFT-CES2/src/stres_nonloc_dft.o differ
+Binary files PW/src/stress.o and PW_DFT-CES2/src/stress.o differ
+Binary files PW/src/stres_us.o and PW_DFT-CES2/src/stres_us.o differ
+Binary files PW/src/struct_fact.o and PW_DFT-CES2/src/struct_fact.o differ
+Binary files PW/src/sum_band.o and PW_DFT-CES2/src/sum_band.o differ
+Binary files PW/src/sumkg.o and PW_DFT-CES2/src/sumkg.o differ
+Binary files PW/src/sumkt.o and PW_DFT-CES2/src/sumkt.o differ
+Binary files PW/src/summary.o and PW_DFT-CES2/src/summary.o differ
+Binary files PW/src/symm_base.mod and PW_DFT-CES2/src/symm_base.mod differ
+Binary files PW/src/symm_base.o and PW_DFT-CES2/src/symm_base.o differ
+Binary files PW/src/symme.mod and PW_DFT-CES2/src/symme.mod differ
+Binary files PW/src/symme.o and PW_DFT-CES2/src/symme.o differ
+Binary files PW/src/symmetrize_at.o and PW_DFT-CES2/src/symmetrize_at.o differ
+Binary files PW/src/tabd.o and PW_DFT-CES2/src/tabd.o differ
+Binary files PW/src/tetra.o and PW_DFT-CES2/src/tetra.o differ
+Binary files PW/src/transform_becsum_nc.o and PW_DFT-CES2/src/transform_becsum_nc.o differ
+Binary files PW/src/transform_becsum_so.o and PW_DFT-CES2/src/transform_becsum_so.o differ
+Binary files PW/src/transform_qq_so.o and PW_DFT-CES2/src/transform_qq_so.o differ
+Binary files PW/src/trnvecc.o and PW_DFT-CES2/src/trnvecc.o differ
+Binary files PW/src/update_pot.o and PW_DFT-CES2/src/update_pot.o differ
+Binary files PW/src/us_exx.mod and PW_DFT-CES2/src/us_exx.mod differ
+Binary files PW/src/us_exx.o and PW_DFT-CES2/src/us_exx.o differ
+Binary files PW/src/us.mod and PW_DFT-CES2/src/us.mod differ
+Binary files PW/src/usnldiag.o and PW_DFT-CES2/src/usnldiag.o differ
+Binary files PW/src/utils.o and PW_DFT-CES2/src/utils.o differ
+Binary files PW/src/vcsmd.o and PW_DFT-CES2/src/vcsmd.o differ
+Binary files PW/src/vcsubs.o and PW_DFT-CES2/src/vcsubs.o differ
+Binary files PW/src/vhpsi.o and PW_DFT-CES2/src/vhpsi.o differ
+Binary files PW/src/vlocal.mod and PW_DFT-CES2/src/vlocal.mod differ
+Binary files PW/src/vloc_of_g.o and PW_DFT-CES2/src/vloc_of_g.o differ
+Binary files PW/src/vloc_psi.o and PW_DFT-CES2/src/vloc_psi.o differ
+diff -urN PW/src/v_of_rho.f90 PW_DFT-CES2/src/v_of_rho.f90
+--- PW/src/v_of_rho.f90	2024-04-23 22:30:33.754371310 +0900
++++ PW_DFT-CES2/src/v_of_rho.f90	2025-07-30 04:51:44.603373813 +0900
+@@ -26,6 +26,10 @@
+   USE cell_base,        ONLY : alat
+   USE control_flags,    ONLY : ts_vdw
+   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
++! DFT-CES start
++  USE scf,              ONLY : ext
++  USE input_parameters, ONLY : dft_ces
++! DFT-CES end
+   !
+   IMPLICIT NONE
+   !
+@@ -79,6 +83,11 @@
+      endif
+   endif
+   !
++! DFT-CES start
++  if ( dft_ces ) then
++     call v_ces( v%of_r )
++  endif
++! DFT-CES end
+   ! ... add an electric field
+   ! 
+   DO is = 1, nspin_lsda
+@@ -552,6 +561,9 @@
+   USE esm,       ONLY: do_comp_esm, esm_hartree, esm_bc
+   USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_2D, cutoff_hartree  
+   !
++  USE io_global,   ONLY : ionode, stdout
++  USE scatter_mod, ONLY : gather_grid
++  !
+   IMPLICIT NONE
+   !
+   COMPLEX(DP), INTENT(IN)  :: rhog(ngm,nspin)
+@@ -565,6 +577,10 @@
+   COMPLEX(DP), ALLOCATABLE :: aux(:), rgtot(:), vaux(:)
+   INTEGER               :: nt
+   !
++  REAL(DP), ALLOCATABLE :: ext_write_r(:), v_xyz(:,:,:)
++  INTEGER :: i, i1, i2, i3, ounit
++  INTEGER, EXTERNAL :: find_free_unit
++  !
+   CALL start_clock( 'v_h' )
+   !
+   ALLOCATE( aux( dfftp%nnr ), aux1( 2, ngm ) )
+@@ -680,6 +696,38 @@
+      !
+   END IF
+   !
++  ALLOCATE( ext_write_r(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
++  ALLOCATE( v_xyz(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x) )
++#if defined(__MPI)
++  CALL gather_grid(dfftp, REAL(aux(:)), ext_write_r)
++#else
++  ext_write_r = REAL(aux(:))
++#endif
++  !
++  if (ionode) then
++     ounit = find_free_unit()
++     OPEN (unit=ounit, file='v_hartree.cube',form='formatted',status='unknown')
++     !
++     i=0
++     do i3=1,dfftp%nr3x
++        do i2=1,dfftp%nr2x
++           do i1=1,dfftp%nr1x
++              i=i+1
++              v_xyz(i1,i2,i3) = ext_write_r(i)
++           end do
++        end do
++     end do
++!     CALL write_cubefile_diag (v_xyz, ounit)
++     close(ounit)
++!     write( stdout,*) "                                  "
++!     WRITE( stdout,*)'  ## Hartree pot for val. elec. (v_hartree.cube) has been written. ## '
++  end if
++  !
++  DEALLOCATE(ext_write_r)
++  DEALLOCATE(v_xyz)
++  !
++
++  !
+   DEALLOCATE( aux, aux1 )
+   !
+   CALL stop_clock( 'v_h' )
+Binary files PW/src/v_of_rho.o and PW_DFT-CES2/src/v_of_rho.o differ
+Binary files PW/src/wannier_check.o and PW_DFT-CES2/src/wannier_check.o differ
+Binary files PW/src/wannier_clean.o and PW_DFT-CES2/src/wannier_clean.o differ
+Binary files PW/src/wannier_enrg.o and PW_DFT-CES2/src/wannier_enrg.o differ
+Binary files PW/src/wannier_init.o and PW_DFT-CES2/src/wannier_init.o differ
+Binary files PW/src/wannier_occ.o and PW_DFT-CES2/src/wannier_occ.o differ
+Binary files PW/src/wannier_proj.o and PW_DFT-CES2/src/wannier_proj.o differ
+Binary files PW/src/weights.o and PW_DFT-CES2/src/weights.o differ
+Binary files PW/src/wfcinit.o and PW_DFT-CES2/src/wfcinit.o differ
+Binary files PW/src/write_ns.o and PW_DFT-CES2/src/write_ns.o differ
+Binary files PW/src/wsweight.o and PW_DFT-CES2/src/wsweight.o differ
+Binary files PW/src/wvfct.mod and PW_DFT-CES2/src/wvfct.mod differ
+Binary files PW/src/xdm_dispersion.o and PW_DFT-CES2/src/xdm_dispersion.o differ
+Binary files PW/src/xdm_module.mod and PW_DFT-CES2/src/xdm_module.mod differ
+Binary files PW/tools/ev.o and PW_DFT-CES2/tools/ev.o differ
+Binary files PW/tools/ev.x and PW_DFT-CES2/tools/ev.x differ
+Binary files PW/tools/ev_xml.mod and PW_DFT-CES2/tools/ev_xml.mod differ
+Binary files PW/tools/ev_xml.o and PW_DFT-CES2/tools/ev_xml.o differ
+Binary files PW/tools/ibrav2cell.o and PW_DFT-CES2/tools/ibrav2cell.o differ
+Binary files PW/tools/ibrav2cell.x and PW_DFT-CES2/tools/ibrav2cell.x differ
+Binary files PW/tools/kpoints.o and PW_DFT-CES2/tools/kpoints.o differ
+Binary files PW/tools/kpoints.x and PW_DFT-CES2/tools/kpoints.x differ
+Binary files PW/tools/pwi2xsf.o and PW_DFT-CES2/tools/pwi2xsf.o differ
+Binary files PW/tools/pwi2xsf.x and PW_DFT-CES2/tools/pwi2xsf.x differ

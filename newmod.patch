@@ -1,0 +1,331 @@
+Binary files Modules/atomic_number.o and Modules_DFT-CES2/atomic_number.o differ
+Binary files Modules/atom.mod and Modules_DFT-CES2/atom.mod differ
+Binary files Modules/atom.o and Modules_DFT-CES2/atom.o differ
+Binary files Modules/autopilot.mod and Modules_DFT-CES2/autopilot.mod differ
+Binary files Modules/autopilot.o and Modules_DFT-CES2/autopilot.o differ
+Binary files Modules/basic_algebra_routines.mod and Modules_DFT-CES2/basic_algebra_routines.mod differ
+Binary files Modules/basic_algebra_routines.o and Modules_DFT-CES2/basic_algebra_routines.o differ
+Binary files Modules/bcast_qes_module.o and Modules_DFT-CES2/bcast_qes_module.o differ
+Binary files Modules/bcast_qes_types_module.mod and Modules_DFT-CES2/bcast_qes_types_module.mod differ
+Binary files Modules/becmod.mod and Modules_DFT-CES2/becmod.mod differ
+Binary files Modules/becmod.o and Modules_DFT-CES2/becmod.o differ
+Binary files Modules/bfgs_module.mod and Modules_DFT-CES2/bfgs_module.mod differ
+Binary files Modules/bfgs_module.o and Modules_DFT-CES2/bfgs_module.o differ
+Binary files Modules/bspline.mod and Modules_DFT-CES2/bspline.mod differ
+Binary files Modules/bspline.o and Modules_DFT-CES2/bspline.o differ
+Binary files Modules/bz_form.mod and Modules_DFT-CES2/bz_form.mod differ
+Binary files Modules/bz_form.o and Modules_DFT-CES2/bz_form.o differ
+Binary files Modules/capital.o and Modules_DFT-CES2/capital.o differ
+Binary files Modules/cell_base.mod and Modules_DFT-CES2/cell_base.mod differ
+Binary files Modules/cell_base.o and Modules_DFT-CES2/cell_base.o differ
+Binary files Modules/check_stop.mod and Modules_DFT-CES2/check_stop.mod differ
+Binary files Modules/check_stop.o and Modules_DFT-CES2/check_stop.o differ
+Binary files Modules/command_line_options.mod and Modules_DFT-CES2/command_line_options.mod differ
+Binary files Modules/command_line_options.o and Modules_DFT-CES2/command_line_options.o differ
+Binary files Modules/compute_dipole.o and Modules_DFT-CES2/compute_dipole.o differ
+Binary files Modules/constants.mod and Modules_DFT-CES2/constants.mod differ
+Binary files Modules/constants.o and Modules_DFT-CES2/constants.o differ
+Binary files Modules/constraints_module.mod and Modules_DFT-CES2/constraints_module.mod differ
+Binary files Modules/constraints_module.o and Modules_DFT-CES2/constraints_module.o differ
+Binary files Modules/control_flags.mod and Modules_DFT-CES2/control_flags.mod differ
+Binary files Modules/control_flags.o and Modules_DFT-CES2/control_flags.o differ
+Binary files Modules/coulomb_vcut_module.mod and Modules_DFT-CES2/coulomb_vcut_module.mod differ
+Binary files Modules/coulomb_vcut.o and Modules_DFT-CES2/coulomb_vcut.o differ
+Binary files Modules/cryst_to_car.o and Modules_DFT-CES2/cryst_to_car.o differ
+Binary files Modules/date_and_tim.o and Modules_DFT-CES2/date_and_tim.o differ
+Binary files Modules/deviatoric.o and Modules_DFT-CES2/deviatoric.o differ
+Binary files Modules/dist.o and Modules_DFT-CES2/dist.o differ
+Binary files Modules/dylmr2.o and Modules_DFT-CES2/dylmr2.o differ
+Binary files Modules/electrons_base.mod and Modules_DFT-CES2/electrons_base.mod differ
+Binary files Modules/electrons_base.o and Modules_DFT-CES2/electrons_base.o differ
+Binary files Modules/emend_upf_module.mod and Modules_DFT-CES2/emend_upf_module.mod differ
+Binary files Modules/emend_upf.o and Modules_DFT-CES2/emend_upf.o differ
+Binary files Modules/environment.mod and Modules_DFT-CES2/environment.mod differ
+Binary files Modules/environment.o and Modules_DFT-CES2/environment.o differ
+Binary files Modules/erf.o and Modules_DFT-CES2/erf.o differ
+Binary files Modules/expint.o and Modules_DFT-CES2/expint.o differ
+Binary files Modules/f90sockets.mod and Modules_DFT-CES2/f90sockets.mod differ
+Binary files Modules/fcp_variables.mod and Modules_DFT-CES2/fcp_variables.mod differ
+Binary files Modules/fcp_variables.o and Modules_DFT-CES2/fcp_variables.o differ
+Binary files Modules/fd_gradient.mod and Modules_DFT-CES2/fd_gradient.mod differ
+Binary files Modules/fd_gradient.o and Modules_DFT-CES2/fd_gradient.o differ
+Binary files Modules/fft_base.mod and Modules_DFT-CES2/fft_base.mod differ
+Binary files Modules/fft_base.o and Modules_DFT-CES2/fft_base.o differ
+Binary files Modules/fft_rho.mod and Modules_DFT-CES2/fft_rho.mod differ
+Binary files Modules/fft_rho.o and Modules_DFT-CES2/fft_rho.o differ
+Binary files Modules/fox_init_module.mod and Modules_DFT-CES2/fox_init_module.mod differ
+Binary files Modules/fox_init_module.o and Modules_DFT-CES2/fox_init_module.o differ
+Binary files Modules/fsockets.o and Modules_DFT-CES2/fsockets.o differ
+Binary files Modules/functionals.o and Modules_DFT-CES2/functionals.o differ
+Binary files Modules/funct.mod and Modules_DFT-CES2/funct.mod differ
+Binary files Modules/funct.o and Modules_DFT-CES2/funct.o differ
+Binary files Modules/generate_function.mod and Modules_DFT-CES2/generate_function.mod differ
+Binary files Modules/generate_function.o and Modules_DFT-CES2/generate_function.o differ
+Binary files Modules/generate_k_along_lines.o and Modules_DFT-CES2/generate_k_along_lines.o differ
+Binary files Modules/global_version.mod and Modules_DFT-CES2/global_version.mod differ
+Binary files Modules/gradutils.o and Modules_DFT-CES2/gradutils.o differ
+Binary files Modules/gth.o and Modules_DFT-CES2/gth.o differ
+Binary files Modules/gvecs.mod and Modules_DFT-CES2/gvecs.mod differ
+Binary files Modules/gvect.mod and Modules_DFT-CES2/gvect.mod differ
+Binary files Modules/gvecw.mod and Modules_DFT-CES2/gvecw.mod differ
+Binary files Modules/gvecw.o and Modules_DFT-CES2/gvecw.o differ
+Binary files Modules/has_xml.o and Modules_DFT-CES2/has_xml.o differ
+Binary files Modules/hdf5_qe.mod and Modules_DFT-CES2/hdf5_qe.mod differ
+Binary files Modules/hdf5_qe.o and Modules_DFT-CES2/hdf5_qe.o differ
+Binary files Modules/inpfile.o and Modules_DFT-CES2/inpfile.o differ
+diff -urN Modules/input_parameters.f90 Modules_DFT-CES2/input_parameters.f90
+--- Modules/input_parameters.f90	2025-07-30 04:49:44.323862736 +0900
++++ Modules_DFT-CES2/input_parameters.f90	2025-07-30 04:49:28.314794712 +0900
+@@ -272,6 +272,14 @@
+ 
+           ! if .TRUE., perform exact exchange calculation using Wannier functions (X. Wu et al., Phys. Rev. B. 79, 085102 (2009))
+ 
++! DFT-CES start
++        LOGICAL :: dft_ces = .false.
++        ! If true reads MD rho from file "file_pot"
++        CHARACTER(len=80) :: rho_ces = './rho_ces.cube'
++        CHARACTER(len=80) :: pauli_rep_ces = './pauli_rep_ces.cube'
++        ! File containing the MD.rho as gaussian cube format
++        ! with conventional charge sign: -1 = electron
++! DFT-CES end
+         LOGICAL  :: lfcpopt = .FALSE. ! FCP optimisation switch
+         LOGICAL  :: lfcpdyn = .FALSE. ! FCP thermostat enabled if .true.
+         !
+@@ -285,6 +293,9 @@
+           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
+           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
+           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
++! DFT-CES start
++          dft_ces, rho_ces, pauli_rep_ces,                                &
++! DFT-CES end
+           lfcpopt, lfcpdyn, input_xml_schema_file, gate                                        
+ !
+ !=----------------------------------------------------------------------------=!
+Binary files Modules/input_parameters.mod and Modules_DFT-CES2/input_parameters.mod differ
+Binary files Modules/input_parameters.o and Modules_DFT-CES2/input_parameters.o differ
+Binary files Modules/int_to_char.o and Modules_DFT-CES2/int_to_char.o differ
+Binary files Modules/invmat.o and Modules_DFT-CES2/invmat.o differ
+Binary files Modules/io_base.mod and Modules_DFT-CES2/io_base.mod differ
+Binary files Modules/io_base.o and Modules_DFT-CES2/io_base.o differ
+Binary files Modules/io_files.mod and Modules_DFT-CES2/io_files.mod differ
+Binary files Modules/io_files.o and Modules_DFT-CES2/io_files.o differ
+Binary files Modules/io_global.mod and Modules_DFT-CES2/io_global.mod differ
+Binary files Modules/io_global.o and Modules_DFT-CES2/io_global.o differ
+diff -urN Modules/ions_base.f90 Modules_DFT-CES2/ions_base.f90
+--- Modules/ions_base.f90	2025-07-30 04:49:44.411863109 +0900
++++ Modules_DFT-CES2/ions_base.f90	2025-07-30 04:49:28.312794703 +0900
+@@ -250,6 +250,7 @@
+                   tau(i,ia) = at_(i,1)*alat_ * tau_(1,ia) + &
+                               at_(i,2)*alat_ * tau_(2,ia) + &
+                               at_(i,3)*alat_ * tau_(3,ia)
++
+                   !
+                   vel(i,ia) = at_(i,1)*alat_ * vel_(1,ia) + &
+                               at_(i,2)*alat_ * vel_(2,ia) + &
+Binary files Modules/ions_base.mod and Modules_DFT-CES2/ions_base.mod differ
+Binary files Modules/ions_base.o and Modules_DFT-CES2/ions_base.o differ
+Binary files Modules/kernel_table.mod and Modules_DFT-CES2/kernel_table.mod differ
+Binary files Modules/kernel_table.o and Modules_DFT-CES2/kernel_table.o differ
+Binary files Modules/kind.o and Modules_DFT-CES2/kind.o differ
+Binary files Modules/kinds.mod and Modules_DFT-CES2/kinds.mod differ
+Binary files Modules/latgen.o and Modules_DFT-CES2/latgen.o differ
+Binary files Modules/libqemod.a and Modules_DFT-CES2/libqemod.a differ
+Binary files Modules/libxc.o and Modules_DFT-CES2/libxc.o differ
+Binary files Modules/linpack.o and Modules_DFT-CES2/linpack.o differ
+Binary files Modules/london_module.mod and Modules_DFT-CES2/london_module.mod differ
+Binary files Modules/lsda_functionals.o and Modules_DFT-CES2/lsda_functionals.o differ
+Binary files Modules/matches.o and Modules_DFT-CES2/matches.o differ
+Binary files Modules/matrix_inversion.mod and Modules_DFT-CES2/matrix_inversion.mod differ
+Binary files Modules/mdiis.mod and Modules_DFT-CES2/mdiis.mod differ
+Binary files Modules/mdiis.o and Modules_DFT-CES2/mdiis.o differ
+Binary files Modules/metagga.o and Modules_DFT-CES2/metagga.o differ
+Binary files Modules/m_gth.mod and Modules_DFT-CES2/m_gth.mod differ
+Binary files Modules/mm_dispersion.o and Modules_DFT-CES2/mm_dispersion.o differ
+Binary files Modules/more_functionals.o and Modules_DFT-CES2/more_functionals.o differ
+Binary files Modules/mp_bands.mod and Modules_DFT-CES2/mp_bands.mod differ
+Binary files Modules/mp_bands.o and Modules_DFT-CES2/mp_bands.o differ
+Binary files Modules/mp_bands_tddfpt.mod and Modules_DFT-CES2/mp_bands_tddfpt.mod differ
+Binary files Modules/mp_exx.mod and Modules_DFT-CES2/mp_exx.mod differ
+Binary files Modules/mp_exx.o and Modules_DFT-CES2/mp_exx.o differ
+Binary files Modules/mp_global.mod and Modules_DFT-CES2/mp_global.mod differ
+Binary files Modules/mp_global.o and Modules_DFT-CES2/mp_global.o differ
+Binary files Modules/mp_images.mod and Modules_DFT-CES2/mp_images.mod differ
+Binary files Modules/mp_images.o and Modules_DFT-CES2/mp_images.o differ
+Binary files Modules/mp_orthopools.mod and Modules_DFT-CES2/mp_orthopools.mod differ
+Binary files Modules/mp_pools.mod and Modules_DFT-CES2/mp_pools.mod differ
+Binary files Modules/mp_pools.o and Modules_DFT-CES2/mp_pools.o differ
+Binary files Modules/mp_wave.mod and Modules_DFT-CES2/mp_wave.mod differ
+Binary files Modules/mp_wave.o and Modules_DFT-CES2/mp_wave.o differ
+Binary files Modules/mp_world.mod and Modules_DFT-CES2/mp_world.mod differ
+Binary files Modules/mp_world.o and Modules_DFT-CES2/mp_world.o differ
+Binary files Modules/noncollin_module.mod and Modules_DFT-CES2/noncollin_module.mod differ
+Binary files Modules/noncol.o and Modules_DFT-CES2/noncol.o differ
+Binary files Modules/open_close_input_file.mod and Modules_DFT-CES2/open_close_input_file.mod differ
+Binary files Modules/open_close_input_file.o and Modules_DFT-CES2/open_close_input_file.o differ
+Binary files Modules/parameters.mod and Modules_DFT-CES2/parameters.mod differ
+Binary files Modules/parameters.o and Modules_DFT-CES2/parameters.o differ
+Binary files Modules/parser.mod and Modules_DFT-CES2/parser.mod differ
+Binary files Modules/parser.o and Modules_DFT-CES2/parser.o differ
+Binary files Modules/paw_variables.mod and Modules_DFT-CES2/paw_variables.mod differ
+Binary files Modules/paw_variables.o and Modules_DFT-CES2/paw_variables.o differ
+Binary files Modules/plot_io.o and Modules_DFT-CES2/plot_io.o differ
+Binary files Modules/plugin_arguments.o and Modules_DFT-CES2/plugin_arguments.o differ
+Binary files Modules/plugin_flags.mod and Modules_DFT-CES2/plugin_flags.mod differ
+Binary files Modules/plugin_flags.o and Modules_DFT-CES2/plugin_flags.o differ
+Binary files Modules/plugin_variables.mod and Modules_DFT-CES2/plugin_variables.mod differ
+Binary files Modules/plugin_variables.o and Modules_DFT-CES2/plugin_variables.o differ
+Binary files Modules/pseudo_types.mod and Modules_DFT-CES2/pseudo_types.mod differ
+Binary files Modules/pseudo_types.o and Modules_DFT-CES2/pseudo_types.o differ
+Binary files Modules/pw_dot.o and Modules_DFT-CES2/pw_dot.o differ
+Binary files Modules/qeh5_base_module.mod and Modules_DFT-CES2/qeh5_base_module.mod differ
+Binary files Modules/qeh5_module.o and Modules_DFT-CES2/qeh5_module.o differ
+Binary files Modules/qes_libs_module.mod and Modules_DFT-CES2/qes_libs_module.mod differ
+Binary files Modules/qes_libs.o and Modules_DFT-CES2/qes_libs.o differ
+Binary files Modules/qes_read_module.mod and Modules_DFT-CES2/qes_read_module.mod differ
+Binary files Modules/qes_read_module.o and Modules_DFT-CES2/qes_read_module.o differ
+Binary files Modules/qes_types_module.mod and Modules_DFT-CES2/qes_types_module.mod differ
+Binary files Modules/qes_types.o and Modules_DFT-CES2/qes_types.o differ
+Binary files Modules/qexml_module.mod and Modules_DFT-CES2/qexml_module.mod differ
+Binary files Modules/qexml.o and Modules_DFT-CES2/qexml.o differ
+Binary files Modules/qexsd_input.mod and Modules_DFT-CES2/qexsd_input.mod differ
+Binary files Modules/qexsd_input.o and Modules_DFT-CES2/qexsd_input.o differ
+Binary files Modules/qexsd_module.mod and Modules_DFT-CES2/qexsd_module.mod differ
+Binary files Modules/qexsd.o and Modules_DFT-CES2/qexsd.o differ
+Binary files Modules/qmmm.mod and Modules_DFT-CES2/qmmm.mod differ
+Binary files Modules/qmmm.o and Modules_DFT-CES2/qmmm.o differ
+Binary files Modules/radial_gradients.o and Modules_DFT-CES2/radial_gradients.o differ
+Binary files Modules/radial_grids.mod and Modules_DFT-CES2/radial_grids.mod differ
+Binary files Modules/radial_grids.o and Modules_DFT-CES2/radial_grids.o differ
+Binary files Modules/random_numbers.mod and Modules_DFT-CES2/random_numbers.mod differ
+Binary files Modules/random_numbers.o and Modules_DFT-CES2/random_numbers.o differ
+Binary files Modules/read_cards_module.mod and Modules_DFT-CES2/read_cards_module.mod differ
+Binary files Modules/read_cards.o and Modules_DFT-CES2/read_cards.o differ
+Binary files Modules/read_input.mod and Modules_DFT-CES2/read_input.mod differ
+Binary files Modules/read_input.o and Modules_DFT-CES2/read_input.o differ
+diff -urN Modules/read_namelists.f90 Modules_DFT-CES2/read_namelists.f90
+--- Modules/read_namelists.f90	2025-07-30 04:49:44.574863802 +0900
++++ Modules_DFT-CES2/read_namelists.f90	2025-07-30 04:49:28.314794712 +0900
+@@ -130,6 +130,11 @@
+        lfcpopt = .FALSE.
+        lfcpdyn = .FALSE.
+        !
++! DFT-CES start
++       dft_ces = .FALSE.
++       rho_ces = './rho_ces.cube'
++       pauli_rep_ces = './pauli_rep_ces.cube'
++! DFT-CES end
+        CALL get_environment_variable( 'QEXML', input_xml_schema_file )
+        !
+        RETURN
+@@ -740,6 +745,11 @@
+        CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
+        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
+        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
++! DFT-CES start
++       CALL mp_bcast( dft_ces,       ionode_id, intra_image_comm )
++       CALL mp_bcast( rho_ces,       ionode_id, intra_image_comm )
++       CALL mp_bcast( pauli_rep_ces,   ionode_id, intra_image_comm )
++! DFT-CES end
+        !
+        RETURN
+        !
+Binary files Modules/read_namelists_module.mod and Modules_DFT-CES2/read_namelists_module.mod differ
+Binary files Modules/read_namelists.o and Modules_DFT-CES2/read_namelists.o differ
+Binary files Modules/read_ncpp.o and Modules_DFT-CES2/read_ncpp.o differ
+Binary files Modules/read_pseudo_mod.mod and Modules_DFT-CES2/read_pseudo_mod.mod differ
+Binary files Modules/read_pseudo.o and Modules_DFT-CES2/read_pseudo.o differ
+Binary files Modules/read_upf_schema_module.mod and Modules_DFT-CES2/read_upf_schema_module.mod differ
+Binary files Modules/read_upf_schema.o and Modules_DFT-CES2/read_upf_schema.o differ
+Binary files Modules/read_upf_v1_module.mod and Modules_DFT-CES2/read_upf_v1_module.mod differ
+Binary files Modules/read_upf_v1.o and Modules_DFT-CES2/read_upf_v1.o differ
+Binary files Modules/read_upf_v2_module.mod and Modules_DFT-CES2/read_upf_v2_module.mod differ
+Binary files Modules/read_upf_v2.o and Modules_DFT-CES2/read_upf_v2.o differ
+Binary files Modules/read_uspp_module.mod and Modules_DFT-CES2/read_uspp_module.mod differ
+Binary files Modules/read_uspp.o and Modules_DFT-CES2/read_uspp.o differ
+Binary files Modules/recips.o and Modules_DFT-CES2/recips.o differ
+Binary files Modules/recvec.o and Modules_DFT-CES2/recvec.o differ
+Binary files Modules/recvec_subs.mod and Modules_DFT-CES2/recvec_subs.mod differ
+Binary files Modules/recvec_subs.o and Modules_DFT-CES2/recvec_subs.o differ
+Binary files Modules/remove_tot_torque.o and Modules_DFT-CES2/remove_tot_torque.o differ
+Binary files Modules/rgen.o and Modules_DFT-CES2/rgen.o differ
+Binary files Modules/run_info.mod and Modules_DFT-CES2/run_info.mod differ
+Binary files Modules/run_info.o and Modules_DFT-CES2/run_info.o differ
+Binary files Modules/rvv10.mod and Modules_DFT-CES2/rvv10.mod differ
+Binary files Modules/set_hubbard_l.o and Modules_DFT-CES2/set_hubbard_l.o differ
+Binary files Modules/set_hubbard_n.o and Modules_DFT-CES2/set_hubbard_n.o differ
+Binary files Modules/setqf.o and Modules_DFT-CES2/setqf.o differ
+Binary files Modules/set_signal.mod and Modules_DFT-CES2/set_signal.mod differ
+Binary files Modules/set_signal.o and Modules_DFT-CES2/set_signal.o differ
+Binary files Modules/simpsn.o and Modules_DFT-CES2/simpsn.o differ
+Binary files Modules/sort.o and Modules_DFT-CES2/sort.o differ
+Binary files Modules/space_group.mod and Modules_DFT-CES2/space_group.mod differ
+Binary files Modules/space_group.o and Modules_DFT-CES2/space_group.o differ
+Binary files Modules/sph_bes.o and Modules_DFT-CES2/sph_bes.o differ
+Binary files Modules/sph_dbes.o and Modules_DFT-CES2/sph_dbes.o differ
+Binary files Modules/splinelib.mod and Modules_DFT-CES2/splinelib.mod differ
+Binary files Modules/splinelib.o and Modules_DFT-CES2/splinelib.o differ
+Binary files Modules/test_input_file.o and Modules_DFT-CES2/test_input_file.o differ
+Binary files Modules/time_step.mod and Modules_DFT-CES2/time_step.mod differ
+Binary files Modules/timestep.o and Modules_DFT-CES2/timestep.o differ
+Binary files Modules/trimcheck.o and Modules_DFT-CES2/trimcheck.o differ
+Binary files Modules/tsvdw_module.mod and Modules_DFT-CES2/tsvdw_module.mod differ
+Binary files Modules/tsvdw.o and Modules_DFT-CES2/tsvdw.o differ
+Binary files Modules/upf_module.mod and Modules_DFT-CES2/upf_module.mod differ
+Binary files Modules/upf.o and Modules_DFT-CES2/upf.o differ
+Binary files Modules/upf_to_internal.mod and Modules_DFT-CES2/upf_to_internal.mod differ
+Binary files Modules/upf_to_internal.o and Modules_DFT-CES2/upf_to_internal.o differ
+Binary files Modules/uspp.mod and Modules_DFT-CES2/uspp.mod differ
+Binary files Modules/uspp.o and Modules_DFT-CES2/uspp.o differ
+Binary files Modules/uspp_param.mod and Modules_DFT-CES2/uspp_param.mod differ
+Binary files Modules/vdw_df.mod and Modules_DFT-CES2/vdw_df.mod differ
+diff -urN Modules/version.f90 Modules_DFT-CES2/version.f90
+--- Modules/version.f90	2025-07-30 04:49:44.634864057 +0900
++++ Modules_DFT-CES2/version.f90	2025-07-30 04:49:28.364794924 +0900
+@@ -12,7 +12,7 @@
+   !
+   SAVE
+   !
+-  CHARACTER (LEN=6) :: version_number = '6.3MaX'
++  CHARACTER (LEN=6) :: version_number = '6.3'
+   CHARACTER (LEN=12) :: svn_revision = 'unknown'
+   !
+ END MODULE global_version
+Binary files Modules/version.o and Modules_DFT-CES2/version.o differ
+Binary files Modules/volume.o and Modules_DFT-CES2/volume.o differ
+Binary files Modules/w0gauss.o and Modules_DFT-CES2/w0gauss.o differ
+Binary files Modules/w1gauss.o and Modules_DFT-CES2/w1gauss.o differ
+Binary files Modules/wannier_gw.mod and Modules_DFT-CES2/wannier_gw.mod differ
+Binary files Modules/wannier_gw.o and Modules_DFT-CES2/wannier_gw.o differ
+Binary files Modules/wannier_new.mod and Modules_DFT-CES2/wannier_new.mod differ
+Binary files Modules/wannier_new.o and Modules_DFT-CES2/wannier_new.o differ
+Binary files Modules/wave_base.mod and Modules_DFT-CES2/wave_base.mod differ
+Binary files Modules/wave_base.o and Modules_DFT-CES2/wave_base.o differ
+Binary files Modules/wavefunctions_module.mod and Modules_DFT-CES2/wavefunctions_module.mod differ
+Binary files Modules/wavefunctions.o and Modules_DFT-CES2/wavefunctions.o differ
+Binary files Modules/wgauss.o and Modules_DFT-CES2/wgauss.o differ
+Binary files Modules/wrappers.mod and Modules_DFT-CES2/wrappers.mod differ
+Binary files Modules/wrappers.o and Modules_DFT-CES2/wrappers.o differ
+Binary files Modules/write_upf_module.mod and Modules_DFT-CES2/write_upf_module.mod differ
+Binary files Modules/write_upf.o and Modules_DFT-CES2/write_upf.o differ
+Binary files Modules/write_upf_schema_module.mod and Modules_DFT-CES2/write_upf_schema_module.mod differ
+Binary files Modules/write_upf_schema.o and Modules_DFT-CES2/write_upf_schema.o differ
+Binary files Modules/write_upf_v2_module.mod and Modules_DFT-CES2/write_upf_v2_module.mod differ
+Binary files Modules/write_upf_v2.o and Modules_DFT-CES2/write_upf_v2.o differ
+Binary files Modules/ws_base.mod and Modules_DFT-CES2/ws_base.mod differ
+Binary files Modules/ws_base.o and Modules_DFT-CES2/ws_base.o differ
+Binary files Modules/wyckoff.mod and Modules_DFT-CES2/wyckoff.mod differ
+Binary files Modules/wyckoff.o and Modules_DFT-CES2/wyckoff.o differ
+Binary files Modules/wy_pos.mod and Modules_DFT-CES2/wy_pos.mod differ
+Binary files Modules/wypos.o and Modules_DFT-CES2/wypos.o differ
+Binary files Modules/xc_f90_lib_m.mod and Modules_DFT-CES2/xc_f90_lib_m.mod differ
+Binary files Modules/xc_f90_types_m.mod and Modules_DFT-CES2/xc_f90_types_m.mod differ
+Binary files Modules/xc_rVV10.o and Modules_DFT-CES2/xc_rVV10.o differ
+Binary files Modules/xc_vdW_DF.o and Modules_DFT-CES2/xc_vdW_DF.o differ
+Binary files Modules/xml_input.mod and Modules_DFT-CES2/xml_input.mod differ
+Binary files Modules/xml_input.o and Modules_DFT-CES2/xml_input.o differ
+Binary files Modules/xml_io_base.mod and Modules_DFT-CES2/xml_io_base.mod differ
+Binary files Modules/xml_io_base.o and Modules_DFT-CES2/xml_io_base.o differ
+Binary files Modules/xsf.o and Modules_DFT-CES2/xsf.o differ
+Binary files Modules/ylmr2.o and Modules_DFT-CES2/ylmr2.o differ
+Binary files Modules/zdotc_wrapper.o and Modules_DFT-CES2/zdotc_wrapper.o differ
+Binary files Modules/zvscal.o and Modules_DFT-CES2/zvscal.o differ
